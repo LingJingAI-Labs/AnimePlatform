@@ -1043,13 +1043,19 @@
                         用户管理
                     </a>
                 </li>
-
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-section="assets">
+                        <span class="nav-icon">🎨</span>
+                        资产库
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link" data-section="logs">
                         <span class="nav-icon">📋</span>
                         日志管理
                     </a>
                 </li>
+
 
             </ul>
         </nav>
@@ -1511,10 +1517,6 @@
                             <span>👤</span>
                             添加用户
                         </button>
-                        <button class="btn btn-secondary">
-                            <span>👥</span>
-                            角色管理
-                        </button>
                     </div>
                     <div class="toolbar-right">
                         <div class="search-box">
@@ -1523,7 +1525,6 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- 用户列表 -->
                 <div class="card">
                     <div class="table-container">
@@ -1666,6 +1667,298 @@
                 </div>
             </section>
 
+            <!-- 资产库 -->
+            <section class="content-section" id="assets">
+                <div class="page-header">
+                    <h1 class="page-title">资产库</h1>
+                    <p class="page-description">管理平台所有AI模型、LoRA、场景等资源</p>
+                </div>
+
+                <!-- 资产统计卡片 -->
+                <div class="grid grid-4">
+                    <div class="stat-card">
+                        <div class="stat-number">24</div>
+                        <div class="stat-label">大模型</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">156</div>
+                        <div class="stat-label">LoRA模型</div>
+                    </div>
+                </div>
+
+                <!-- 资产管理标签页 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">资产管理</h2>
+                        <div class="toolbar-right">
+                            <button class="btn btn-primary" onclick="openModal('uploadAssetModal')">上传资产</button>
+                        </div>
+                    </div>
+
+                    <!-- 标签页导航 -->
+                    <div class="tabs">
+                        <div class="tab active" data-tab="models-tab" onclick="switchAssetTab('models-tab', this)">🤖 大模型</div>
+                        <div class="tab" data-tab="lora-tab" onclick="switchAssetTab('lora-tab', this)">🎨 LoRA模型</div>
+                        <div class="tab" data-tab="characters-tab" onclick="switchAssetTab('characters-tab', this)">👤 角色资源</div>
+                    </div>
+
+                        <!-- 大模型标签页 -->
+                        <div class="tab-content active" id="models-tab">
+                            <div class="toolbar">
+                                <div class="toolbar-left">
+                                    <input type="text" class="form-input search-input" placeholder="搜索模型..." style="width: 250px;">
+                                    <select class="form-select" style="width: 120px;">
+                                        <option>全部类型</option>
+                                        <option>文本生成</option>
+                                        <option>图像生成</option>
+                                        <option>视频生成</option>
+                                    </select>
+                                </div>
+                                <div class="toolbar-right">
+                                    <button class="btn btn-secondary">批量管理</button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th><input type="checkbox" onchange="toggleSelectAll(this, 'models-table')"></th>
+                                            <th>模型名称</th>
+                                            <th>类型</th>
+                                            <th>版本</th>
+                                            <th>大小</th>
+                                            <th>状态</th>
+                                            <th>上传时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><input type="checkbox"></td>
+                                            <td>
+                                                <div class="project-name-cell">
+                                                    <h4>Stable Diffusion XL</h4>
+                                                    <p class="project-subtitle">高质量图像生成模型</p>
+                                                </div>
+                                            </td>
+                                            <td>图像生成</td>
+                                            <td>v1.0</td>
+                                            <td>6.9GB</td>
+                                            <td><span class="status-badge active">可用</span></td>
+                                            <td>2025-01-15</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-small btn-secondary">详情</button>
+                                                    <button class="btn btn-small btn-secondary">下载</button>
+                                                    <button class="btn btn-small btn-danger">删除</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="checkbox"></td>
+                                            <td>
+                                                <div class="project-name-cell">
+                                                    <h4>AnimateDiff</h4>
+                                                    <p class="project-subtitle">视频动画生成模型</p>
+                                                </div>
+                                            </td>
+                                            <td>视频生成</td>
+                                            <td>v2.1</td>
+                                            <td>4.2GB</td>
+                                            <td><span class="status-badge active">可用</span></td>
+                                            <td>2025-01-12</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-small btn-secondary">详情</button>
+                                                    <button class="btn btn-small btn-secondary">下载</button>
+                                                    <button class="btn btn-small btn-danger">删除</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><input type="checkbox"></td>
+                                            <td>
+                                                <div class="project-name-cell">
+                                                    <h4>GPT-4o Vision</h4>
+                                                    <p class="project-subtitle">多模态文本生成模型</p>
+                                                </div>
+                                            </td>
+                                            <td>文本生成</td>
+                                            <td>v1.2</td>
+                                            <td>API</td>
+                                            <td><span class="status-badge active">可用</span></td>
+                                            <td>2025-01-10</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-small btn-secondary">详情</button>
+                                                    <button class="btn btn-small btn-secondary">配置</button>
+                                                    <button class="btn btn-small btn-danger">删除</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- LoRA模型标签页 -->
+                        <div class="tab-content" id="lora-tab">
+                            <div class="toolbar">
+                                <div class="toolbar-left">
+                                    <input type="text" class="form-input search-input" placeholder="搜索LoRA..." style="width: 250px;">
+                                    <select class="form-select" style="width: 120px;">
+                                        <option>全部风格</option>
+                                        <option>角色</option>
+                                        <option>风格</option>
+                                        <option>场景</option>
+                                    </select>
+                                </div>
+                                <div class="toolbar-right">
+                                    <button class="btn btn-primary" onclick="openModal('trainLoraModal')">训练LoRA</button>
+                                </div>
+                            </div>
+                            <div class="grid grid-3">
+                                <div class="card" style="margin-bottom: var(--spacing-lg);">
+                                    <div style="aspect-ratio: 16/9; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: var(--radius-lg); margin-bottom: var(--spacing-md); display: flex; align-items: center; justify-content: center; color: white; font-size: var(--text-lg); font-weight: 600;">角色LoRA预览</div>
+                                    <h3 style="margin: 0 0 var(--spacing-sm) 0; color: var(--color-text-primary);">霸道总裁角色</h3>
+                                    <p style="margin: 0 0 var(--spacing-md) 0; color: var(--color-text-muted); font-size: var(--text-sm);">现代都市霸道总裁角色LoRA模型</p>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                                        <span class="status-badge active">已训练</span>
+                                        <span style="color: var(--color-text-muted); font-size: var(--text-xs);">156MB</span>
+                                    </div>
+                                    <div style="display: flex; gap: var(--spacing-sm);">
+                                        <button class="btn btn-small btn-secondary" style="flex: 1;">下载</button>
+                                        <button class="btn btn-small btn-primary" style="flex: 1;">使用</button>
+                                    </div>
+                                </div>
+                                <div class="card" style="margin-bottom: var(--spacing-lg);">
+                                    <div style="aspect-ratio: 16/9; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: var(--radius-lg); margin-bottom: var(--spacing-md); display: flex; align-items: center; justify-content: center; color: white; font-size: var(--text-lg); font-weight: 600;">风格LoRA预览</div>
+                                    <h3 style="margin: 0 0 var(--spacing-sm) 0; color: var(--color-text-primary);">二次元风格</h3>
+                                    <p style="margin: 0 0 var(--spacing-md) 0; color: var(--color-text-muted); font-size: var(--text-sm);">日系动漫风格LoRA模型</p>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                                        <span class="status-badge active">已训练</span>
+                                        <span style="color: var(--color-text-muted); font-size: var(--text-xs);">203MB</span>
+                                    </div>
+                                    <div style="display: flex; gap: var(--spacing-sm);">
+                                        <button class="btn btn-small btn-secondary" style="flex: 1;">下载</button>
+                                        <button class="btn btn-small btn-primary" style="flex: 1;">使用</button>
+                                    </div>
+                                </div>
+                                <div class="card" style="margin-bottom: var(--spacing-lg);">
+                                    <div style="aspect-ratio: 16/9; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: var(--radius-lg); margin-bottom: var(--spacing-md); display: flex; align-items: center; justify-content: center; color: white; font-size: var(--text-lg); font-weight: 600;">场景LoRA预览</div>
+                                    <h3 style="margin: 0 0 var(--spacing-sm) 0; color: var(--color-text-primary);">古代宫廷</h3>
+                                    <p style="margin: 0 0 var(--spacing-md) 0; color: var(--color-text-muted); font-size: var(--text-sm);">中国古代宫廷场景LoRA模型</p>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md);">
+                                        <span class="status-badge paused">训练中</span>
+                                        <span style="color: var(--color-text-muted); font-size: var(--text-xs);">进度: 75%</span>
+                                    </div>
+                                    <div style="display: flex; gap: var(--spacing-sm);">
+                                        <button class="btn btn-small btn-secondary" style="flex: 1;" disabled>等待中</button>
+                                        <button class="btn btn-small btn-danger" style="flex: 1;">停止</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <!-- 角色资源标签页 -->
+                        <div class="tab-content" id="characters-tab">
+                            <div class="toolbar">
+                                <div class="toolbar-left">
+                                    <input type="text" class="form-input search-input" placeholder="搜索角色..." style="width: 250px;">
+                                    <select class="form-select" style="width: 120px;">
+                                        <option>全部角色</option>
+                                        <option>男性</option>
+                                        <option>女性</option>
+                                        <option>动物</option>
+                                    </select>
+                                </div>
+                                <div class="toolbar-right">
+                                    <button class="btn btn-primary" onclick="openModal('createCharacterModal')">创建角色</button>
+                                </div>
+                            </div>
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>角色名称</th>
+                                            <th>类型</th>
+                                            <th>风格</th>
+                                            <th>关联LoRA</th>
+                                            <th>创建时间</th>
+                                            <th>使用次数</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div class="project-name-cell">
+                                                    <h4>李总裁</h4>
+                                                    <p class="project-subtitle">霸道总裁男主角</p>
+                                                </div>
+                                            </td>
+                                            <td>男性</td>
+                                            <td>现代都市</td>
+                                            <td>霸道总裁角色</td>
+                                            <td>2025-01-15</td>
+                                            <td>23</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-small btn-secondary">编辑</button>
+                                                    <button class="btn btn-small btn-primary">使用</button>
+                                                    <button class="btn btn-small btn-danger">删除</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="project-name-cell">
+                                                    <h4>小雪</h4>
+                                                    <p class="project-subtitle">清纯校园女生</p>
+                                                </div>
+                                            </td>
+                                            <td>女性</td>
+                                            <td>校园青春</td>
+                                            <td>二次元风格</td>
+                                            <td>2025-01-12</td>
+                                            <td>45</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-small btn-secondary">编辑</button>
+                                                    <button class="btn btn-small btn-primary">使用</button>
+                                                    <button class="btn btn-small btn-danger">删除</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="project-name-cell">
+                                                    <h4>皇帝陛下</h4>
+                                                    <p class="project-subtitle">古代帝王角色</p>
+                                                </div>
+                                            </td>
+                                            <td>男性</td>
+                                            <td>古装历史</td>
+                                            <td>古代宫廷</td>
+                                            <td>2025-01-10</td>
+                                            <td>12</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="btn btn-small btn-secondary">编辑</button>
+                                                    <button class="btn btn-small btn-primary">使用</button>
+                                                    <button class="btn btn-small btn-danger">删除</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
 
         </main>
     </div>
@@ -1715,6 +2008,26 @@
         // 模态框控制
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('active');
+        }
+
+        // 资产库标签页切换
+        function switchTab(tabId, tabBtn) {
+            // 移除所有标签页按钮的激活状态
+            const tabBtns = tabBtn.parentNode.querySelectorAll('.tab-btn');
+            tabBtns.forEach(btn => btn.classList.remove('active'));
+            
+            // 移除所有标签页内容的激活状态
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // 激活当前标签页按钮
+            tabBtn.classList.add('active');
+            
+            // 激活对应的标签页内容
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
         }
 
         function closeModal(modalId) {
@@ -1770,6 +2083,26 @@
             if (configPage) {
                 configPage.className = 'content-section';
                 configPage.style.display = 'none';
+            }
+        }
+
+        // 资产库标签页切换函数
+        function switchAssetTab(tabId, tabElement) {
+            // 移除所有标签页的活跃状态
+            const allTabs = document.querySelectorAll('.tabs .tab');
+            allTabs.forEach(tab => tab.classList.remove('active'));
+
+            // 激活当前标签页
+            tabElement.classList.add('active');
+
+            // 隐藏所有标签页内容
+            const allTabContents = document.querySelectorAll('.tab-content');
+            allTabContents.forEach(content => content.style.display = 'none');
+
+            // 显示对应的标签页内容
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.style.display = 'block';
             }
         }
 
