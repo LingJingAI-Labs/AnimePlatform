@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目配置</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* 设计系统 - 间距 */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 12px;
+            --spacing-lg: 16px;
+            --spacing-xl: 20px;
+            --spacing-2xl: 24px;
+
+            /* 设计系统 - 字体 */
+            --text-xs: 11px;
+            --text-sm: 13px;
+            --text-md: 14px;
+            --text-lg: 16px;
+            --text-xl: 18px;
+            --text-2xl: 20px;
+            --text-3xl: 24px;
+
+            /* 设计系统 - 圆角 */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+
+            /* 设计系统 - 颜色 */
+            --color-primary: #00ff88;
+            --color-primary-dark: #00d4ff;
+            --color-secondary: #8b5cf6;
+            --color-background: #0a0b0f;
+            --color-surface: rgba(255, 255, 255, 0.05);
+            --color-surface-hover: rgba(255, 255, 255, 0.08);
+            --color-border: rgba(255, 255, 255, 0.08);
+            --color-border-hover: rgba(255, 255, 255, 0.15);
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #e4e6eb;
+            --color-text-muted: #9ca3af;
+            --color-text-subtle: #6b7280;
+            --color-success: #10b981;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: linear-gradient(180deg, var(--color-background) 0%, #131620 100%);
+            color: var(--color-text-secondary);
+            line-height: 1.4;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 95vw;
+            width: 100%;
+            margin: 0 auto;
+            padding: var(--spacing-xl) var(--spacing-lg);
+        }
+
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 95vw;
+                padding: var(--spacing-xl);
+            }
+        }
+
+        @media (min-width: 1600px) {
+            .container {
+                max-width: 96vw;
+            }
+        }
+
+        @media (min-width: 1920px) {
+            .container {
+                max-width: 97vw;
+            }
+        }
+
+        /* 页面头部 */
+        .page-header {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-2xl);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .page-title {
+            font-size: var(--text-3xl);
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        /* 按钮系统 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            padding: 8px var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            white-space: nowrap;
+            height: 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+            color: #000;
+            font-weight: 600;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(139, 92, 246, 0.12);
+            color: var(--color-secondary);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--color-danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-small {
+            padding: 6px var(--spacing-sm);
+            font-size: var(--text-xs);
+            height: 28px;
+        }
+
+        /* 标签页 */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .tab {
+            padding: var(--spacing-md) var(--spacing-xl);
+            color: var(--color-text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+            font-size: var(--text-md);
+            font-weight: 500;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab:hover {
+            color: var(--color-text-primary);
+        }
+
+        .tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        /* 标签页内容 */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 表单控件 */
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            color: var(--color-text-muted);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            padding: 8px var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.3s ease;
+            height: 36px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(0, 255, 136, 0.5);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+        }
+
+        .form-select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            padding: 8px var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.3s ease;
+            height: 36px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--color-border);
+            color: var(--color-text-primary);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            transition: all 0.3s ease;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* 基本信息表单优化 */
+        .basic-info-form {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+        }
+
+        .section-title {
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-lg);
+            font-size: 18px;
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: var(--spacing-sm);
+            font-weight: 600;
+        }
+
+        .members-section {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+        }
+
+        /* 表格样式 */
+        .table-container {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--color-text-primary);
+            font-weight: 600;
+            padding: var(--spacing-md) var(--spacing-lg);
+            text-align: left;
+            border-bottom: 1px solid var(--color-border);
+            font-size: var(--text-sm);
+        }
+
+        .table td {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-bottom: 1px solid var(--color-border);
+            color: var(--color-text-secondary);
+            font-size: var(--text-sm);
+        }
+
+        .table tr:hover {
+             background: rgba(255, 255, 255, 0.05);
+         }
+
+         /* 表格优化 */
+         .table-container {
+             min-width: 0;
+             overflow-x: auto;
+         }
+
+         .table {
+             table-layout: auto;
+             overflow: hidden;
+             width: 100%;
+             min-width: 500px;
+         }
+
+         .table th,
+         .table td {
+             white-space: nowrap;
+             overflow: hidden;
+             text-overflow: ellipsis;
+         }
+
+         .table td {
+             padding: var(--spacing-sm) var(--spacing-md);
+         }
+
+         .table th {
+             padding: var(--spacing-sm) var(--spacing-md);
+             font-weight: 600;
+         }
+
+         /* 成员管理表格特殊样式 */
+         .members-table {
+             margin-top: var(--spacing-md);
+         }
+
+         .members-table .table {
+             min-width: 600px;
+         }
+
+         .members-table td:first-child {
+             font-weight: 500;
+         }
+
+         .members-table .btn {
+             margin-right: var(--spacing-xs);
+         }
+
+         /* 在大屏幕上允许表格内容换行 */
+         @media (min-width: 1400px) {
+             .table th,
+             .table td {
+                 white-space: normal;
+             }
+             .table {
+                 min-width: auto;
+             }
+             .members-table .table {
+                 min-width: auto;
+             }
+         }
+
+        /* 状态徽章 */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: var(--text-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--color-success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-badge.active {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--color-primary);
+        }
+
+        .status-completed {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--color-primary);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .status-paused {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--color-warning);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .status-inactive {
+            background: rgba(107, 114, 128, 0.15);
+            color: var(--color-text-subtle);
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+
+        /* 剧集卡片 */
+        .episode-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .episode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .episode-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .episode-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        /* 模态框 */
+        .modal-footer {
+             display: flex;
+             justify-content: flex-end;
+             gap: var(--spacing-md);
+             padding-top: var(--spacing-lg);
+             border-top: 1px solid var(--color-border);
+             margin-top: var(--spacing-lg);
+         }
+
+         /* 网格布局 */
+         .grid {
+             display: grid;
+             gap: var(--spacing-lg);
+         }
+
+         .grid-2 {
+             grid-template-columns: 1.2fr 0.8fr;
+         }
+
+         .grid-3 {
+             grid-template-columns: repeat(3, 1fr);
+         }
+
+         .grid-4 {
+             grid-template-columns: repeat(4, 1fr);
+         }
+
+         /* 基本信息专用网格 */
+         .basic-info-grid {
+             display: grid;
+             grid-template-columns: 1.5fr 1fr;
+             gap: var(--spacing-2xl);
+             margin-bottom: 40px;
+         }
+
+         /* 原片成片专用网格 */
+         .episodes-grid {
+             display: grid;
+             grid-template-columns: 1fr 1fr;
+             gap: var(--spacing-2xl);
+             min-height: 600px;
+             align-items: start;
+         }
+
+         @media (min-width: 1400px) {
+             .basic-info-grid {
+                 grid-template-columns: 1.8fr 1fr;
+                 gap: var(--spacing-3xl);
+             }
+             .episodes-grid {
+                 gap: var(--spacing-3xl);
+             }
+             
+             .grid-2 {
+                 grid-template-columns: repeat(3, 1fr);
+             }
+             
+             .grid-3 {
+                 grid-template-columns: repeat(4, 1fr);
+             }
+         }
+
+         @media (min-width: 1600px) {
+             .basic-info-grid {
+                 grid-template-columns: 2fr 1fr;
+             }
+             
+             .grid-2 {
+                 grid-template-columns: repeat(4, 1fr);
+             }
+             
+             .grid-3 {
+                 grid-template-columns: repeat(5, 1fr);
+             }
+         }
+
+         /* 卡片组件 */
+         .card {
+             background: rgba(255, 255, 255, 0.03);
+             border: 1px solid var(--color-border);
+             border-radius: var(--radius-lg);
+             padding: var(--spacing-lg);
+             transition: all 0.3s ease;
+         }
+
+         .card:hover {
+             background: rgba(255, 255, 255, 0.05);
+             border-color: var(--color-border-hover);
+         }
+
+         .card-header {
+             margin-bottom: var(--spacing-lg);
+             padding-bottom: var(--spacing-md);
+             border-bottom: 1px solid var(--color-border);
+         }
+
+         .card-title {
+             font-size: var(--text-lg);
+             font-weight: 600;
+             color: var(--color-text-primary);
+             margin-bottom: var(--spacing-sm);
+         }
+
+         /* 工具栏 */
+         .toolbar {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             margin-bottom: var(--spacing-lg);
+             padding: var(--spacing-md);
+             background: rgba(255, 255, 255, 0.03);
+             border-radius: var(--radius-md);
+             border: 1px solid var(--color-border);
+         }
+
+         /* 搜索框 */
+         .search-box {
+             position: relative;
+             max-width: 300px;
+         }
+
+         .search-input {
+             width: 100%;
+             padding: 8px var(--spacing-md) 8px 36px;
+             background: rgba(255, 255, 255, 0.08);
+             border: 1px solid var(--color-border);
+             border-radius: var(--radius-md);
+             color: var(--color-text-primary);
+             font-size: var(--text-sm);
+             transition: all 0.3s ease;
+         }
+
+         .search-input:focus {
+             outline: none;
+             border-color: rgba(0, 255, 136, 0.5);
+             background: rgba(255, 255, 255, 0.12);
+             box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+         }
+
+         .search-icon {
+             position: absolute;
+             left: 12px;
+             top: 50%;
+             transform: translateY(-50%);
+             color: var(--color-text-muted);
+             font-size: var(--text-sm);
+         }
+
+         /* 剧集网格布局 */
+         .episode-grid {
+             display: grid;
+             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+             gap: var(--spacing-lg);
+             max-height: 650px;
+             overflow-y: auto;
+             padding: var(--spacing-md);
+             border: 1px solid var(--color-border);
+             border-radius: var(--radius-lg);
+             background: rgba(255, 255, 255, 0.02);
+         }
+
+         .episode-card {
+             transition: transform 0.2s ease, box-shadow 0.2s ease;
+         }
+
+         .episode-card:hover {
+             transform: translateY(-2px);
+             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+         }
+
+         @media (min-width: 1400px) {
+             .episode-grid {
+                 grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+                 gap: var(--spacing-xl);
+                 max-height: 700px;
+             }
+         }
+
+         @media (min-width: 1600px) {
+             .episode-grid {
+                 grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+             }
+         }
+
+         @media (min-width: 1920px) {
+             .episode-grid {
+                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+             }
+         }
+
+         /* 响应式设计 */
+         @media (max-width: 768px) {
+             .container {
+                 padding: var(--spacing-lg);
+                 max-width: 98vw;
+             }
+
+             .page-header {
+                 padding: var(--spacing-lg);
+             }
+
+             .tabs {
+                 overflow-x: auto;
+                 white-space: nowrap;
+             }
+
+             .grid-2,
+             .grid-3,
+             .basic-info-grid,
+             .episodes-grid {
+                 grid-template-columns: 1fr;
+                 gap: var(--spacing-lg);
+             }
+
+             .basic-info-form,
+             .members-section {
+                 padding: var(--spacing-lg);
+             }
+
+             .toolbar {
+                 flex-direction: column;
+                 gap: var(--spacing-md);
+                 align-items: stretch;
+             }
+
+             .search-box {
+                 max-width: none;
+             }
+
+             .episode-grid {
+                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                 max-height: 400px;
+             }
+
+             .section-title {
+                 font-size: 16px;
+             }
+         }
+
+         @media (max-width: 480px) {
+             .container {
+                 padding: var(--spacing-md);
+             }
+
+             .basic-info-form,
+             .members-section {
+                 padding: var(--spacing-md);
+             }
+
+             .episode-grid {
+                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+             }
+         }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">
+                <span>📋</span>
+                项目配置
+            </h1>
+            <button class="btn btn-secondary" onclick="returnToProjectManagement()">← 返回项目管理</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="basic-info" onclick="switchTab('basic-info', this)">基本信息</button>
+            <button class="tab" data-tab="workflow-management" onclick="switchTab('workflow-management', this)">工作流管理</button>
+            <button class="tab" data-tab="episodes" onclick="switchTab('episodes', this)">原片及成片</button>
+        </div>
+
+        <!-- 基本信息 -->
+        <div class="tab-content active" id="basic-info">
+            <div class="basic-info-grid">
+                 <div class="basic-info-form">
+                     <h3 class="section-title">项目基本信息</h3>
+                    <div class="form-group">
+                        <label class="form-label">项目名称</label>
+                        <input type="text" class="form-input" id="project-name" value="我的短剧项目">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">项目描述</label>
+                        <textarea class="form-textarea" id="project-description" rows="4" placeholder="请输入项目描述...">这是一个关于现代都市爱情的短剧项目，讲述了一对年轻人在繁忙都市中相遇、相知、相爱的故事。</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">项目状态</label>
+                        <select class="form-select" id="project-status">
+                            <option value="planning">规划中</option>
+                            <option value="in-progress" selected>进行中</option>
+                            <option value="completed">已完成</option>
+                            <option value="paused">已暂停</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">项目截止日期</label>
+                        <input type="date" class="form-input" id="project-deadline">
+                    </div>
+                </div>
+                
+                <!-- 成员管理 -->
+                 <div class="members-section">
+                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg);">
+                         <h3 class="section-title" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0;">项目成员</h3>
+                         <button class="btn btn-primary btn-small">添加成员</button>
+                     </div>
+                    <div class="table-container members-table">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>用户名</th>
+                                    <th>角色</th>
+                                    <th>权限</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>张三</td>
+                                    <td>项目负责人</td>
+                                    <td>全部权限</td>
+                                    <td>
+                                        <button class="btn btn-small btn-secondary">编辑</button>
+                                        <button class="btn btn-small btn-danger">移除</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>李四</td>
+                                    <td>设计师</td>
+                                    <td>编辑权限</td>
+                                    <td>
+                                        <button class="btn btn-small btn-secondary">编辑</button>
+                                        <button class="btn btn-small btn-danger">移除</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>王五</td>
+                                    <td>开发工程师</td>
+                                    <td>编辑权限</td>
+                                    <td>
+                                        <button class="btn btn-small btn-secondary">编辑</button>
+                                        <button class="btn btn-small btn-danger">移除</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 工作流管理 -->
+        <div class="tab-content" id="workflow-management">
+            <!-- 工作流配置 -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="color: var(--color-primary); margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid var(--color-primary); padding-bottom: 10px;">工作流配置</h3>
+                <div class="form-group">
+                    <label class="form-label">工作流选择</label>
+                    <select class="form-select" id="workflow-select">
+                        <option value="">请选择工作流</option>
+                        <option value="default">默认视频生成工作流</option>
+                        <option value="character">角色生成工作流</option>
+                        <option value="scene">场景生成工作流</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">上传新工作流</label>
+                    <div style="border: 2px dashed var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-xl); text-align: center; color: var(--color-text-muted);">
+                        <input type="file" id="workflow-upload" accept=".json" style="display: none;">
+                        <button class="btn btn-primary" onclick="document.getElementById('workflow-upload').click()">上传工作流文件</button>
+                        <p style="margin-top: 10px;">支持 ComfyUI JSON 格式工作流文件</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">工作流配置</label>
+                    <textarea class="form-textarea" id="workflow-config-text" rows="10" placeholder="工作流JSON配置将在此显示..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">AI模型配置</label>
+                    <select class="form-select">
+                        <option>GPT-4o</option>
+                        <option>Claude-3</option>
+                        <option>Gemini Pro</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 素材库 -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="color: var(--color-primary); margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid var(--color-primary); padding-bottom: 10px;">素材库</h3>
+                <div class="form-group">
+                    <label class="form-label">素材上传</label>
+                    <div style="border: 2px dashed var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-xl); text-align: center; color: var(--color-text-muted);">
+                        <input type="file" id="material-upload" multiple accept="image/*,video/*,audio/*" style="display: none;">
+                        <button class="btn btn-primary" onclick="document.getElementById('material-upload').click()">选择文件</button>
+                        <p style="margin-top: 10px;">或拖拽文件到此处上传素材</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">已上传素材</label>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>文件名</th>
+                                    <th>类型</th>
+                                    <th>大小</th>
+                                    <th>上传时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>character_image_01.jpg</td>
+                                    <td>图片</td>
+                                    <td>2.3MB</td>
+                                    <td>2025-01-15</td>
+                                    <td>
+                                        <button class="btn btn-small btn-secondary">预览</button>
+                                        <button class="btn btn-small btn-danger">删除</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- LoRA模型 -->
+            <div style="margin-bottom: 40px;">
+                <h3 style="color: var(--color-primary); margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid var(--color-primary); padding-bottom: 10px;">LoRA模型</h3>
+                <div class="form-group">
+                    <label class="form-label">LoRA模型上传</label>
+                    <div style="border: 2px dashed var(--color-border); border-radius: var(--radius-lg); padding: var(--spacing-xl); text-align: center; color: var(--color-text-muted);">
+                        <input type="file" id="lora-upload" accept=".safetensors,.ckpt,.pt" style="display: none;">
+                        <button class="btn btn-primary" onclick="document.getElementById('lora-upload').click()">选择LoRA文件</button>
+                        <p style="margin-top: 10px;">支持 .safetensors, .ckpt, .pt 格式</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">已安装模型</label>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>模型名称</th>
+                                    <th>版本</th>
+                                    <th>大小</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>character_lora_v1.safetensors</td>
+                                    <td>v1.0</td>
+                                    <td>144MB</td>
+                                    <td><span class="status-badge active">已启用</span></td>
+                                    <td>
+                                        <button class="btn btn-small btn-secondary">配置</button>
+                                        <button class="btn btn-small btn-danger">删除</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 原片及成片 -->
+        <div class="tab-content" id="episodes">
+            <div class="episodes-grid">
+                <!-- 短剧原片 -->
+                 <div>
+                     <h3 class="section-title">短剧原片</h3>
+                    <div class="episode-grid">
+                        <div class="episode-card" onclick="openEpisodeModal('original', 1)">
+                            <div style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-radius: 8px; padding: 10px; cursor: pointer; transition: all 0.3s ease; border: 1px solid var(--color-border);">
+                                <div style="background: #333; height: 80px; border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: var(--color-text-muted);">
+                                    <span style="font-size: 12px;">第1集</span>
+                                </div>
+                                <div style="font-size: 12px; color: var(--color-text); text-align: center;">原片_第1集.mp4</div>
+                                <div style="font-size: 10px; color: var(--color-text-muted); text-align: center; margin-top: 4px;">15:30</div>
+                            </div>
+                        </div>
+                        <div class="episode-card" onclick="openEpisodeModal('original', 2)">
+                            <div style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-radius: 8px; padding: 10px; cursor: pointer; transition: all 0.3s ease; border: 1px solid var(--color-border);">
+                                <div style="background: #333; height: 80px; border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: var(--color-text-muted);">
+                                    <span style="font-size: 12px;">第2集</span>
+                                </div>
+                                <div style="font-size: 12px; color: var(--color-text); text-align: center;">原片_第2集.mp4</div>
+                                <div style="font-size: 10px; color: var(--color-text-muted); text-align: center; margin-top: 4px;">18:45</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 动漫成片 -->
+                 <div>
+                     <h3 class="section-title">动漫成片</h3>
+                    <div class="episode-grid">
+                        <div class="episode-card" onclick="openEpisodeModal('anime', 1)">
+                            <div style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-radius: 8px; padding: 10px; cursor: pointer; transition: all 0.3s ease; border: 1px solid var(--color-border); position: relative;">
+                                <div style="background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); height: 80px; border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: #000;">
+                                    <span style="font-size: 12px; font-weight: bold;">第1集</span>
+                                </div>
+                                <div style="font-size: 12px; color: var(--color-text); text-align: center;">动漫_第1集.mp4</div>
+                                <div style="font-size: 10px; color: var(--color-text-muted); text-align: center; margin-top: 4px;">15:30</div>
+                                <button onclick="event.stopPropagation(); goToTransferPlatform(1)" style="position: absolute; top: 8px; right: 8px; background: rgba(0, 255, 136, 0.2); border: none; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--color-primary);" title="转到详情页面">
+                                    →
+                                </button>
+                            </div>
+                        </div>
+                        <div class="episode-card">
+                            <div style="background: linear-gradient(135deg, #1a1a1a, #2a2a2a); border-radius: 8px; padding: 10px; border: 2px dashed var(--color-border); opacity: 0.6;">
+                                <div style="background: #333; height: 80px; border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: var(--color-text-muted);">
+                                    <span style="font-size: 12px;">制作中</span>
+                                </div>
+                                <div style="font-size: 12px; color: var(--color-text-muted); text-align: center;">第2集</div>
+                                <div style="font-size: 10px; color: var(--color-text-muted); text-align: center; margin-top: 4px;">--:--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="returnToProjectManagement()">取消</button>
+            <button class="btn btn-primary" onclick="saveProjectConfig()">保存配置</button>
+        </div>
+    </div>
+
+    <script>
+        // 获取URL参数
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // 标签页切换
+        function switchTab(tabId, element) {
+            // 移除所有活跃状态
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // 激活选中的标签页
+            element.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // 返回项目管理页面
+        function returnToProjectManagement() {
+            // 通知父页面返回项目管理
+            if (window.parent && window.parent.returnToProjectManagement) {
+                window.parent.returnToProjectManagement();
+            } else {
+                // 如果是直接访问，则跳转到主页面
+                window.location.href = 'AdminPlatform.html';
+            }
+        }
+
+        // 保存项目配置
+        function saveProjectConfig() {
+            // 这里添加保存逻辑
+            alert('配置已保存');
+            returnToProjectManagement();
+        }
+
+        // 打开剧集模态框
+        function openEpisodeModal(type, episode) {
+            alert(`打开${type === 'original' ? '原片' : '动漫成片'}第${episode}集`);
+        }
+
+        // 跳转到转换平台
+        function goToTransferPlatform(episode) {
+            window.open(`TransferPlatform.html?episode=${episode}`, '_blank');
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            const projectId = getUrlParameter('projectId');
+            if (projectId) {
+                console.log('加载项目配置数据:', projectId);
+                // 这里可以根据projectId加载具体的项目数据
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,3308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoRA 训练工作台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 左侧项目标签栏 */
+        .project-sidebar {
+            width: 280px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 1000;
+        }
+
+        .project-sidebar.collapsed {
+            width: 90px;
+            padding: 20px 16px;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            margin-left: 280px;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 100vh;
+        }
+
+        /* 当侧边栏折叠时，调整主内容区域的左边距 */
+        .project-sidebar.collapsed+.main-content {
+            margin-left: 90px;
+        }
+
+        /* 项目列表滚动区域调整 */
+        .project-list {
+            max-height: calc(100vh - 220px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 4px;
+            /* 为滚动条留出空间 */
+        }
+
+        /* 滚动条样式优化 */
+        .project-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .project-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }
+
+        .project-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 2px;
+        }
+
+        .project-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 136, 0.5);
+        }
+
+        /* 响应式设计更新 */
+        @media (max-width: 768px) {
+            .project-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+                padding: 16px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .project-sidebar.collapsed {
+                width: 100%;
+                max-height: 100px;
+                padding: 16px;
+            }
+
+            .main-content {
+                margin-left: 0;
+                min-height: auto;
+            }
+
+            .project-sidebar.collapsed+.main-content {
+                margin-left: 0;
+            }
+
+            .app-container {
+                flex-direction: column;
+            }
+
+            .project-sidebar.collapsed .project-item {
+                display: inline-flex;
+                width: 60px;
+                height: 60px;
+                margin: 0 8px 12px 0;
+            }
+
+            .project-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                max-height: none;
+            }
+        }
+
+        /* 添加平滑的页面加载动画 */
+        @keyframes slideInFromLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                transform: translateX(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .project-sidebar {
+            animation: slideInFromLeft 0.5s ease-out;
+        }
+
+        .main-content {
+            animation: slideInFromRight 0.5s ease-out;
+        }
+
+        /* 确保固定定位时的层级关系 */
+        .project-sidebar {
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 当侧边栏固定时，为主内容添加顶部内边距以避免被遮挡 */
+        .main-content .container {
+            padding-top: 20px;
+        }
+
+        .project-header {
+            margin-bottom: 24px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, #00d4ff, #7b68ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .project-sidebar.collapsed .sidebar-title {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        .collapse-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .collapse-btn:hover {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: rgba(0, 255, 136, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .collapse-icon {
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .project-sidebar.collapsed .collapse-icon {
+            transform: rotate(180deg);
+        }
+
+        .add-project-btn {
+            width: 100%;
+            height: 48px;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #000;
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+        }
+
+        .add-project-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-text {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-icon {
+            position: absolute;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .project-sidebar.collapsed .add-project-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 18px;
+            margin: 0 auto 24px;
+        }
+
+        .project-sidebar.collapsed .btn-text {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+
+        .project-sidebar.collapsed .btn-icon {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .project-list {
+            max-height: calc(100vh - 220px);
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .project-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .project-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+        }
+
+        .project-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 136, 0.3);
+            border-radius: 2px;
+        }
+
+        .project-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        .project-sidebar.collapsed .project-item {
+            width: 56px;
+            height: 56px;
+            padding: 0;
+            margin: 0 auto 20px;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 0;
+            border-radius: 18px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(6px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .project-sidebar.collapsed .project-item:hover {
+            transform: translateY(-4px) scale(1.08);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .project-item.active {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.15);
+            box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+        }
+
+        .project-sidebar.collapsed .project-item.active {
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.4), 0 8px 24px rgba(0, 255, 136, 0.2);
+        }
+
+        .project-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .project-sidebar.collapsed .project-icon {
+            font-size: 28px;
+            width: auto;
+            height: auto;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+        }
+
+        .project-content {
+            flex: 1;
+            min-width: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .project-sidebar.collapsed .project-content {
+            display: none;
+        }
+
+        .project-content h4 {
+            color: #00ff88;
+            margin-bottom: 10px;
+            font-size: 15px;
+            line-height: 1.3;
+            font-weight: 600;
+        }
+
+        .project-content p {
+            color: #a0a0a0;
+            font-size: 12px;
+            line-height: 1.5;
+            opacity: 0.9;
+        }
+
+        .project-actions {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+
+        .project-item:hover .project-actions {
+            opacity: 1;
+        }
+
+        .project-sidebar.collapsed .project-actions {
+            display: none;
+        }
+
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .action-btn.edit {
+            background: rgba(255, 193, 7, 0.9);
+            color: #000;
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(255, 193, 7, 1);
+            transform: scale(1.1);
+        }
+
+        .action-btn.remove {
+            background: rgba(255, 107, 157, 0.9);
+            color: #fff;
+        }
+
+        .action-btn.remove:hover {
+            background: rgba(255, 107, 157, 1);
+            transform: scale(1.1);
+        }
+
+        /* 折叠状态下的悬浮提示 */
+        .project-sidebar.collapsed .project-item::before {
+            content: attr(title);
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .project-sidebar.collapsed .project-item:hover::before {
+            opacity: 1;
+            left: 75px;
+        }
+
+        /* 折叠状态的状态指示器 */
+        .project-sidebar.collapsed .project-item::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .project-sidebar.collapsed .project-item.active::after {
+            opacity: 1;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+        }
+
+        /* 响应式设计更新 */
+        @media (max-width: 768px) {
+            .project-sidebar {
+                width: 100%;
+                max-height: 200px;
+                overflow-y: auto;
+                padding: 16px;
+            }
+
+            .project-sidebar.collapsed {
+                width: 100%;
+                max-height: 100px;
+                padding: 16px;
+            }
+
+            .project-sidebar.collapsed .project-item {
+                display: inline-flex;
+                width: 60px;
+                height: 60px;
+                margin: 0 8px 12px 0;
+            }
+
+            .project-list {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .app-container {
+                flex-direction: column;
+            }
+        }
+
+        /* 响应式设计更新 */
+        @media (max-width: 768px) {
+            .project-sidebar {
+                width: 100%;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+
+            .project-sidebar.collapsed {
+                width: 100%;
+                max-height: 80px;
+            }
+
+            .app-container {
+                flex-direction: column;
+            }
+        }
+
+        .project-item:hover .project-actions {
+            opacity: 1;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #00d4ff, #7b68ee, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #a0a0a0;
+            font-size: 1.1rem;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 8px;
+            margin-bottom: 40px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px 24px;
+            text-align: center;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            color: #a0a0a0;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #000;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #00ff88;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #00ff88;
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.2);
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 16px;
+            margin: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #000;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(123, 104, 238, 0.8);
+            color: #fff;
+            box-shadow: 0 8px 32px rgba(123, 104, 238, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            background: rgba(123, 104, 238, 1);
+        }
+
+        .btn-danger {
+            background: rgba(255, 107, 157, 0.8);
+            color: #fff;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            margin: 4px;
+        }
+
+        .select-field {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .image-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .image-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 255, 136, 0.2);
+        }
+
+        .image-card.selected {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .image-card.annotated {
+            border-color: #ffc107;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.4);
+        }
+
+        .image-placeholder {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #2a2a3a, #3a3a4a);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 14px;
+            text-align: center;
+            padding: 16px;
+        }
+
+        .image-tooltip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 12px;
+            font-size: 12px;
+            line-height: 1.4;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .image-card:hover .image-tooltip {
+            opacity: 1;
+        }
+
+        .image-actions {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .image-card:hover .image-actions {
+            opacity: 1;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .icon-btn.download {
+            background: rgba(0, 212, 255, 0.8);
+            color: #fff;
+        }
+
+        .icon-btn.edit {
+            background: rgba(255, 193, 7, 0.8);
+            color: #fff;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00d4ff);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-training {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .status-completed {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .status-error {
+            background: rgba(255, 107, 157, 0.2);
+            color: #ff6b9d;
+        }
+
+        .parameter-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .slider-container {
+            margin: 16px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+        }
+
+        .log-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .model-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .model-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .model-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
+        }
+
+        .tag-container {
+            display: flex;
+            gap: 12px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 12px 20px;
+            background: rgba(123, 104, 238, 0.6);
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(123, 104, 238, 0.4);
+        }
+
+        .tag.selected {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #000;
+            border-color: #00ff88;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .collapsible {
+            cursor: pointer;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin: 16px 0;
+            transition: all 0.3s ease;
+        }
+
+        .collapsible:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .collapsible.active .collapsible-content {
+            max-height: 800px;
+            padding: 20px 0;
+        }
+
+        /* 新增样式 */
+        .lora-selection {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .lora-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .lora-item label {
+            color: #e0e0e0;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
+        .weight-control {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .weight-value {
+            color: #00ff88;
+            font-weight: 600;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .lora-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .action-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider-switch {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider-switch:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider-switch {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+        }
+
+        input:checked+.slider-switch:before {
+            transform: translateX(26px);
+        }
+
+        .action-btn.add {
+            background: rgba(0, 255, 136, 0.8);
+            color: #000;
+        }
+
+        .action-btn.remove {
+            background: rgba(255, 107, 157, 0.8);
+            color: #fff;
+        }
+
+        .prompt-group {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .prompt-group:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+        }
+
+        .prompt-group h4 {
+            color: #00ff88;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .prompt-preview {
+            color: #a0a0a0;
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .prompt-full {
+            display: none;
+            margin-top: 12px;
+        }
+
+        .prompt-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-left: 3px solid #00ff88;
+        }
+
+        .prompt-cn {
+            color: #e0e0e0;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 4px;
+        }
+
+        .prompt-en {
+            color: #a0a0a0;
+            font-size: 13px;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .prompt-group.expanded .prompt-preview {
+            display: none;
+        }
+
+        .prompt-group.expanded .prompt-full {
+            display: block;
+        }
+
+        .image-group {
+            margin-bottom: 32px;
+        }
+
+        .image-group h4 {
+            color: #00ff88;
+            margin-bottom: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .learning-rate-display {
+            color: #00ff88;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .count-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .count-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .count-btn.selected {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+        }
+
+        .training-preview {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #2a2a3a, #3a3a4a);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .advanced-params {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        .param-compact {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .param-compact label {
+            color: #e0e0e0;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .param-compact input,
+        .param-compact select {
+            padding: 8px 12px;
+            font-size: 14px;
+        }
+
+        .multi-prompt-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .prompt-set {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 3px solid #7b68ee;
+        }
+
+        .prompt-set h5 {
+            color: #7b68ee;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        /* 新增样式 - 图片参考区域 */
+        .image-reference {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .reference-upload {
+            border: 2px dashed rgba(0, 255, 136, 0.5);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+        }
+
+        .reference-upload:hover {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .reference-upload.has-image {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        /* 风格模式的上传界面 */
+        .style-upload-mode {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .upload-area {
+            border: 3px dashed rgba(0, 255, 136, 0.5);
+            border-radius: 20px;
+            padding: 80px 40px;
+            margin: 40px 0;
+            background: rgba(255, 255, 255, 0.03);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: #00ff88;
+            margin-bottom: 20px;
+        }
+
+        /* 筛选控制区域 */
+        .filter-controls {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        /* 人物素材特有的子模块 */
+        .generation-module {
+            background: rgba(123, 104, 238, 0.1);
+            border: 1px solid rgba(123, 104, 238, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .segmentation-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .segment-item {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .segment-item.selected {
+            border-color: #00ff88;
+        }
+
+        .final-material-display {
+            background: rgba(255, 107, 157, 0.1);
+            border: 1px solid rgba(255, 107, 157, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* 参数导入导出 */
+        .params-management {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .params-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* 隐藏文件输入 */
+        .hidden-file-input {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+
+            .project-sidebar {
+                width: 100%;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .parameter-group {
+                grid-template-columns: 1fr;
+            }
+
+            .weight-control {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .advanced-params {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        /* 素材配置区域样式 */
+        .material-config-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 24px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .config-left,
+        .config-right {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .config-group {
+            flex: 1;
+        }
+
+        .config-title {
+            color: #00ff88;
+            font-size: 16px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        /* 图片参考上传区域 */
+        .reference-upload-area {
+            border: 2px dashed rgba(0, 255, 136, 0.3);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .reference-upload-area:hover {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.05);
+        }
+
+        .reference-upload-area.has-image {
+            border-color: #00ff88;
+            background: rgba(0, 255, 136, 0.1);
+        }
+
+        .reference-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: #00ff88;
+        }
+
+        .upload-text {
+            text-align: center;
+        }
+
+        .upload-main {
+            color: #e0e0e0;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .upload-sub {
+            color: #a0a0a0;
+            font-size: 12px;
+        }
+
+        .reference-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+
+        .reference-tip {
+            color: #a0a0a0;
+            font-size: 13px;
+            line-height: 1.4;
+            text-align: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border-left: 3px solid #00ff88;
+        }
+
+        /* 模板选择器 */
+        .template-selector {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .template-btn {
+            padding: 8px 16px;
+            background: rgba(123, 104, 238, 0.6);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-btn:hover {
+            background: rgba(123, 104, 238, 0.8);
+            transform: translateY(-1px);
+        }
+
+        .template-btn:active {
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            color: #000;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .material-config-section {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .reference-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .template-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- 左侧项目标签栏 -->
+        <div class="project-sidebar" id="projectSidebar">
+            <div class="project-header">
+                <div class="header-content">
+                    <h2 class="sidebar-title">🚀 训练项目</h2>
+                    <button class="collapse-btn" onclick="toggleSidebar()" title="折叠/展开">
+                        <span class="collapse-icon">‹</span>
+                    </button>
+                </div>
+                <button class="add-project-btn" onclick="addNewProject()">
+                    <span class="btn-text">+ 新建项目</span>
+                    <span class="btn-icon">+</span>
+                </button>
+            </div>
+
+            <div class="project-list" id="projectList">
+                <div class="project-item active" onclick="selectProject(this)" title="人物肖像训练">
+                    <div class="project-actions">
+                        <button class="action-btn edit" onclick="editProject(event, this)" title="编辑">✎</button>
+                        <button class="action-btn remove" onclick="deleteProject(event, this)" title="删除">×</button>
+                    </div>
+                    <div class="project-icon">👤</div>
+                    <div class="project-content">
+                        <h4>人物肖像训练</h4>
+                        <p>素材类型: 人物<br>创建时间: 2024-01-15<br>状态: 素材收集中</p>
+                    </div>
+                </div>
+
+                <div class="project-item" onclick="selectProject(this)" title="动漫风格训练">
+                    <div class="project-actions">
+                        <button class="action-btn edit" onclick="editProject(event, this)" title="编辑">✎</button>
+                        <button class="action-btn remove" onclick="deleteProject(event, this)" title="删除">×</button>
+                    </div>
+                    <div class="project-icon">🎨</div>
+                    <div class="project-content">
+                        <h4>动漫风格训练</h4>
+                        <p>素材类型: 风格<br>创建时间: 2024-01-14<br>状态: 训练完成</p>
+                    </div>
+                </div>
+
+                <div class="project-item" onclick="selectProject(this)" title="场景风景训练">
+                    <div class="project-actions">
+                        <button class="action-btn edit" onclick="editProject(event, this)" title="编辑">✎</button>
+                        <button class="action-btn remove" onclick="deleteProject(event, this)" title="删除">×</button>
+                    </div>
+                    <div class="project-icon">🏞️</div>
+                    <div class="project-content">
+                        <h4>场景风景训练</h4>
+                        <p>素材类型: 场景<br>创建时间: 2024-01-13<br>状态: 训练中</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="main-content">
+            <div class="container">
+                <div class="header">
+                    <h1>LoRA 训练工作台</h1>
+                    <p>专业的AI模型训练平台，助力创意无限</p>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(0)">素材收集与生成</button>
+                    <button class="tab" onclick="switchTab(1)">LoRA训练</button>
+                    <button class="tab" onclick="switchTab(2)">模型测试</button>
+                </div>
+
+                <!-- 模块1: 训练素材生成选择 -->
+                <div class="tab-content active">
+                    <!-- 普通模式内容 -->
+                    <div id="normalMode">
+                        <!-- 修改后的两列布局 -->
+                        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 32px;">
+                            <!-- 左侧：素材分类设置 -->
+                            <div class="card">
+                                <h3>🎯 素材分类设置</h3>
+
+                                <!-- 素材类型选择区域 -->
+                                <div class="form-group">
+                                    <label>选择素材类型（单选）</label>
+                                    <div class="tag-container">
+                                        <div class="tag selected" onclick="selectMaterialType(this, 'person')">人物</div>
+                                        <div class="tag" onclick="selectMaterialType(this, 'style')">风格</div>
+                                    </div>
+                                </div>
+
+                                <!-- 素材配置区域 -->
+                                <div class="material-config-section" style="grid-template-columns: 1fr; gap: 16px;">
+                                    <!-- 图片参考区域 -->
+                                    <div class="config-group">
+                                        <h4 class="config-title">📸 图片参考</h4>
+                                        <div class="reference-upload-area"
+                                            onclick="document.getElementById('referenceUpload').click()">
+                                            <div class="reference-content" id="referenceContent">
+                                                <div class="upload-icon">📷</div>
+                                                <div class="upload-text">
+                                                    <p class="upload-main">点击上传参考图片</p>
+                                                    <p class="upload-sub">支持JPG、PNG格式</p>
+                                                </div>
+                                            </div>
+                                            <input type="file" id="referenceUpload" class="hidden-file-input"
+                                                accept="image/*" onchange="handleReferenceUpload(this)">
+                                        </div>
+
+                                        <div class="reference-actions">
+                                            <button class="btn btn-secondary btn-small"
+                                                onclick="extractPromptFromImage()" id="extractBtn" disabled>
+                                                🔍 反推提示词
+                                            </button>
+                                            <button class="btn btn-primary btn-small" onclick="generateFromImage()"
+                                                id="generateBtn" disabled>
+                                                🎨 图片参考素材
+                                            </button>
+                                        </div>
+
+                                        <div class="reference-tip">
+                                            💡 上传参考图片后默认进行参考图生图
+                                        </div>
+                                    </div>
+
+                                    <!-- 生成配置区域 -->
+                                    <div class="config-group">
+                                        <h4 class="config-title">⚙️ 生成配置</h4>
+
+                                        <!-- 生成数量选择 -->
+                                        <div class="form-group">
+                                            <label>提示词组数量</label>
+                                            <div class="count-selector">
+                                                <div class="count-btn" onclick="selectCount(this, 3)">3</div>
+                                                <div class="count-btn selected" onclick="selectCount(this, 5)">5</div>
+                                                <div class="count-btn" onclick="selectCount(this, 8)">8</div>
+                                                <div class="count-btn" onclick="selectCount(this, 10)">10</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 提示词输入区域 -->
+                                <div class="prompt-inputs-section">
+                                    <h4 class="config-title">📝 提示词配置</h4>
+
+                                    <div class="grid-2"
+                                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                        <div class="form-group">
+                                            <label>固定提示词</label>
+                                            <textarea class="input-field" rows="2" placeholder="摄影风格、艺术风格等..."
+                                                id="stylePrompt"></textarea>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>默认前置提示词</label>
+                                            <textarea class="input-field" rows="2"
+                                                placeholder="high quality, 8k, detailed等..."
+                                                id="qualityPrompt"></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>核心提示词</label>
+                                        <textarea class="input-field" rows="3" placeholder="输入核心提示词，用逗号分隔...（自动开启润色）"
+                                            id="corePrompt"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- 操作按钮区域 -->
+                                <div class="action-buttons">
+                                    <button class="btn btn-primary" onclick="generatePromptGroups()">✨ 自动扩展提示词</button>
+                                </div>
+                            </div>
+
+                            <!-- 右侧：参考图生成设置 -->
+                            <div class="card">
+                                <h3>🎨 参考图生成设置</h3>
+
+                                <!-- 提示词管理区域 -->
+                                <div class="form-group">
+                                    <h4 class="config-title" style="margin-bottom: 16px;">📝 扩展提示词组管理</h4>
+                                    <div id="promptGroupList">
+                                        <div class="prompt-group" onclick="togglePromptGroup(this)">
+                                            <h4>
+                                                提示词组 1
+                                                <span style="font-size: 12px;">▼</span>
+                                            </h4>
+                                            <div class="prompt-preview">美丽肖像，细致面部，专业照明...</div>
+                                            <div class="prompt-full">
+                                                <div class="prompt-item">
+                                                    <div class="prompt-cn">美丽肖像，细致面部特征，专业摄影照明，高品质，8K分辨率</div>
+                                                    <div class="prompt-en">beautiful portrait, detailed facial features,
+                                                        professional photography lighting, high quality, 8k resolution
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="prompt-group" onclick="togglePromptGroup(this)">
+                                            <h4>
+                                                提示词组 2
+                                                <span style="font-size: 12px;">▼</span>
+                                            </h4>
+                                            <div class="prompt-preview">艺术肖像，戏剧性照明，创意构图...</div>
+                                            <div class="prompt-full">
+                                                <div class="prompt-item">
+                                                    <div class="prompt-cn">艺术肖像，戏剧性照明，创意构图，鲜艳色彩，动态姿势</div>
+                                                    <div class="prompt-en">artistic portrait, dramatic lighting,
+                                                        creative composition, vibrant colors, dynamic pose</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="prompt-group" onclick="togglePromptGroup(this)">
+                                            <h4>
+                                                提示词组 3
+                                                <span style="font-size: 12px;">▼</span>
+                                            </h4>
+                                            <div class="prompt-preview">电影风格肖像，情绪氛围，胶片摄影...</div>
+                                            <div class="prompt-full">
+                                                <div class="prompt-item">
+                                                    <div class="prompt-cn">电影风格肖像，情绪氛围，胶片摄影，景深效果，散景背景</div>
+                                                    <div class="prompt-en">cinematic portrait, moody atmosphere, film
+                                                        photography, depth of field, bokeh background</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="prompt-group" onclick="togglePromptGroup(this)">
+                                            <h4>
+                                                提示词组 4
+                                                <span style="font-size: 12px;">▼</span>
+                                            </h4>
+                                            <div class="prompt-preview">时尚肖像，奢华风格，高端摄影...</div>
+                                            <div class="prompt-full">
+                                                <div class="prompt-item">
+                                                    <div class="prompt-cn">时尚肖像，奢华风格，高端摄影，精致造型，设计师服装</div>
+                                                    <div class="prompt-en">fashion portrait, luxury style, high-end
+                                                        photography, sophisticated styling, designer clothing</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="prompt-group" onclick="togglePromptGroup(this)">
+                                            <h4>
+                                                提示词组 5
+                                                <span style="font-size: 12px;">▼</span>
+                                            </h4>
+                                            <div class="prompt-preview">自然，户外摄影，生活方式拍摄...</div>
+                                            <div class="prompt-full">
+                                                <div class="prompt-item">
+                                                    <div class="prompt-cn">自然，户外摄影，生活方式拍摄，真实瞬间，自然表情</div>
+                                                    <div class="prompt-en">natural portrait, outdoor photography,
+                                                        lifestyle shot, candid moment, authentic expression</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- LoRA选择区域 -->
+                                <div class="form-group">
+                                    <h4 class="config-title" style="margin-bottom: 16px;">🎭 LoRA模型选择</h4>
+                                    <div class="lora-selection" id="loraSelection">
+                                        <div class="lora-item">
+                                            <div class="lora-actions">
+                                                <button class="action-btn add" onclick="addLoraSlot()"
+                                                    title="添加LoRA">+</button>
+                                            </div>
+                                            <div class="weight-control">
+                                                <select class="select-field" style="width: 200px;">
+                                                    <option>Portrait_Style_v1</option>
+                                                    <option>Anime_Style_v2</option>
+                                                    <option>Realistic_v3</option>
+                                                    <option>无</option>
+                                                </select>
+                                                <span class="weight-value">0.80</span>
+                                                <input type="range" class="slider" style="width: 120px;" min="0" max="2"
+                                                    step="0.01" value="0.80" onchange="updateLoraWeight(this, 0)">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 生成操作区域 -->
+                                <div class="form-group">
+                                    <div style="text-align: center; margin-top: 32px;">
+                                        <button class="btn btn-primary" onclick="generateReferenceImages()"
+                                            id="generateReferenceBtn">
+                                            🖼️ 生成参考图
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 初始参考图 -->
+                        <div class="card">
+                            <h3>🖼️ 初始参考图</h3>
+
+                            <!-- 筛选控制 -->
+                            <div class="filter-controls">
+                                <div class="filter-row">
+                                    <label style="color: #e0e0e0; margin: 0;">筛选条件:</label>
+                                    <select class="select-field" style="width: 150px;">
+                                        <option>全部批次</option>
+                                        <option>批次1</option>
+                                        <option>批次2</option>
+                                        <option>批次3</option>
+                                    </select>
+                                    <select class="select-field" style="width: 150px;">
+                                        <option>全部图片组</option>
+                                        <option>提示词组1</option>
+                                        <option>提示词组2</option>
+                                        <option>提示词组3</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <p style="color: #a0a0a0; margin-bottom: 20px;">
+                                已选择: <span style="color: #00ff88;" id="selectedCount">2</span> / 推荐: <span
+                                    style="color: #ffc107;">20-50张</span>
+                            </p>
+
+                            <!-- 提示词组1的图片 -->
+                            <div class="image-group">
+                                <h4>📸 提示词组 1 - 美丽肖像</h4>
+                                <div style="margin-bottom: 12px;">
+                                    <button class="btn btn-small btn-secondary" onclick="selectImageParams('group1')">📋
+                                        以选中图片参数修改提示词</button>
+                                </div>
+                                <div class="image-grid">
+                                    <div class="image-card" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 20, CFG: 7.5<br>
+                                            尺寸: 512x768<br>
+                                            种子: 1234567890
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>组1-图1</div>
+                                            <div style="font-size: 12px; margin-top: 8px;">点击选择</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="image-card selected annotated" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 25, CFG: 8.0<br>
+                                            尺寸: 512x768<br>
+                                            种子: 9876543210<br>
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>组1-图2</div>
+                                            <div style="font-size: 12px; margin-top: 8px;">已选择</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                            <button class="icon-btn edit" onclick="editAnnotation(event, this)"
+                                                title="编辑标注">✎</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="image-card" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 20, CFG: 7.0<br>
+                                            尺寸: 768x512<br>
+                                            种子: 5555555555
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>组1-图3</div>
+                                            <div style="font-size: 12px; margin-top: 8px;">生成中...</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="image-card selected" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 30, CFG: 7.5<br>
+                                            尺寸: 512x768<br>
+                                            种子: 1111111111
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>组1-图4</div>
+                                            <div style="font-size: 12px; margin-top: 8px;">已选择</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="image-card" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 20, CFG: 8.5<br>
+                                            尺寸: 512x768<br>
+                                            种子: 2222222222
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>组1-图5</div>
+                                            <div style="font-size: 12px; margin-top: 8px;">点击选择</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center; margin-top: 32px;">
+                                <!-- <button class="btn btn-primary" onclick="batchAnnotate()">🏷️ 批量标注</button>
+                                <button class="btn btn-secondary">⚙️ 调整训练参数</button> -->
+                                <button class="btn btn-primary" onclick="segmentMaterials()">✂️ 切分素材</button>
+                            </div>
+                        </div>
+
+                        <!-- 人物素材特有：生成素材子模块 -->
+                        <div class="generation-module" id="generationModule" style="display: block;">
+                            <h3 style="color: #7b68ee;">🎭 生成素材（人物专用）</h3>
+                            <br></br>
+                            <div class="form-group">
+                                <label>素材切分处理</label>
+                                <div class="segmentation-preview" id="segmentationPreview">
+                                    <div class="segment-item selected">
+                                        <div class="image-placeholder" style="height: 120px;">
+                                            <div>切分图1</div>
+                                            <div style="font-size: 11px;">已选择</div>
+                                        </div>
+                                    </div>
+                                    <div class="segment-item">
+                                        <div class="image-placeholder" style="height: 120px;">
+                                            <div>切分图2</div>
+                                            <div style="font-size: 11px;">点击选择</div>
+                                        </div>
+                                    </div>
+                                    <div class="segment-item selected">
+                                        <div class="image-placeholder" style="height: 120px;">
+                                            <div>切分图3</div>
+                                            <div style="font-size: 11px;">已选择</div>
+                                        </div>
+                                    </div>
+                                    <div class="segment-item">
+                                        <div class="image-placeholder" style="height: 120px;">
+                                            <div>切分图4</div>
+                                            <div style="font-size: 11px;">点击选择</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary btn-small" onclick="downloadAllSegments()">💾
+                                    全部下载</button>
+                                <br></br>
+                                <div class="form-group">
+                                    <label>背景/场景提示词</label>
+                                    <textarea class="input-field" rows="3" placeholder="输入人物生成提示词..."></textarea>
+                                    <p style="color: #a0a0a0; font-size: 14px; margin-top: 8px;">
+                                        💡 此提示词将自动与上方设置的风格增强提示词和质量控制提示词结合
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>生成人物多表情</label>
+                                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                                    <button class="btn btn-primary" onclick="generateHeadshots()">🎨 生成带背景表情图</button>
+                                    <button class="btn btn-secondary" onclick="generatePureHeadshots()">⚪
+                                        生成纯白背景表情图</button>
+                                </div>
+
+                                <div class="image-grid" id="headshotGrid">
+                                    <div class="image-card selected" onclick="toggleImageSelection(this)">
+                                        <div class="image-placeholder">
+                                            <div>表情1-带背景</div>
+                                            <div style="font-size: 11px; margin-top: 4px;">开心</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                        </div>
+                                    </div>
+                                    <div class="image-card" onclick="toggleImageSelection(this)">
+                                        <div class="image-placeholder">
+                                            <div>表情2-纯白</div>
+                                            <div style="font-size: 11px; margin-top: 4px;">平静</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                        </div>
+                                    </div>
+                                    <div class="image-card selected" onclick="toggleImageSelection(this)">
+                                        <div class="image-placeholder">
+                                            <div>表情3-带背景</div>
+                                            <div style="font-size: 11px; margin-top: 4px;">严肃</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                        </div>
+                                    </div>
+                                    <div class="image-card selected" onclick="toggleImageSelection(this)">
+                                        <div class="image-placeholder">
+                                            <div>表情4-纯白</div>
+                                            <div style="font-size: 11px; margin-top: 4px;">微笑</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: center; margin-top: 32px;">
+                                    <button class="btn btn-primary" onclick="segmentMaterials()">添加选中素材</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 人物素材特有：最终训练素材展示子模块 -->
+                        <div class="final-material-display" id="finalMaterialDisplay" style="display: block;">
+                            <h3 style="color: #ff6b9d;">🎯 最终训练素材展示</h3>
+
+                            <div class="form-group">
+                                <label>已选择的所有素材（共 <span style="color: #00ff88;">6</span> 张）</label>
+                                <div class="image-grid">
+                                    <div class="image-card selected annotated" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 25, CFG: 8.0<br>
+                                            尺寸: 512x768<br>
+                                            种子: 9876543210<br>
+                                            标注: 待标注
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>生成表情0</div>
+                                            <div style="font-size: 12px; margin-top: 8px;">待标注</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                            <button class="icon-btn edit" onclick="editAnnotation(event, this)"
+                                                title="编辑标注">✎</button>
+                                        </div>
+                                    </div>
+                                    <div class="image-card selected" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 25, CFG: 8.0<br>
+                                            尺寸: 512x768<br>
+                                            种子: 9876543210<br>
+                                            标注: 已标注
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>生成表情1</div>
+                                            <div style="font-size: 11px; margin-top: 4px;">已标注</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                            <button class="icon-btn edit" onclick="editAnnotation(event, this)"
+                                                title="编辑标注">✎</button>
+                                        </div>
+                                    </div>
+                                    <div class="image-card selected annotated" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 25, CFG: 8.0<br>
+                                            尺寸: 512x768<br>
+                                            种子: 9876543210<br>
+                                            标注: 待标注
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>生成表情2</div>
+                                            <div style="font-size: 11px; margin-top: 4px;">待标注</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                            <button class="icon-btn edit" onclick="editAnnotation(event, this)"
+                                                title="编辑标注">✎</button>
+                                        </div>
+                                    </div>
+                                    <div class="image-card selected" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 25, CFG: 8.0<br>
+                                            尺寸: 512x768<br>
+                                            种子: 9876543210<br>
+                                            标注: 已标注
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>生成表情3</div>
+                                            <div style="font-size: 11px; margin-top: 4px;">已标注</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                            <button class="icon-btn edit" onclick="editAnnotation(event, this)"
+                                                title="编辑标注">✎</button>
+                                        </div>
+                                    </div>
+                                    <div class="image-card selected" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 25, CFG: 8.0<br>
+                                            尺寸: 512x768<br>
+                                            种子: 9876543210<br>
+                                            标注: 已标注
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>生成表情4</div>
+                                            <div style="font-size: 11px; margin-top: 4px;">已标注</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                            <button class="icon-btn edit" onclick="editAnnotation(event, this)"
+                                                title="编辑标注">✎</button>
+                                        </div>
+                                    </div>
+                                    <div class="image-card selected" onclick="toggleImageSelection(this)">
+                                        <div class="image-tooltip">
+                                            参数: Steps: 25, CFG: 8.0<br>
+                                            尺寸: 512x768<br>
+                                            种子: 9876543210<br>
+                                            标注: 已标注
+                                        </div>
+                                        <div class="image-placeholder">
+                                            <div>初始素材2</div>
+                                            <div style="font-size: 11px; margin-top: 4px;">已标注</div>
+                                        </div>
+                                        <div class="image-actions">
+                                            <button class="icon-btn download" onclick="downloadImage(event, this)"
+                                                title="下载">↓</button>
+                                            <button class="icon-btn edit" onclick="editAnnotation(event, this)"
+                                                title="编辑标注">✎</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center; margin-top: 24px;">
+                                <button class="btn btn-primary" onclick="batchAnnotateFinal()">🏷️ 批量标注所有素材</button>
+                                <button class="btn btn-secondary" onclick="previewTrainingData()">预览训练数据</button>
+                                <button class="btn btn-primary" onclick="sendToTraining()">🚀 发送训练LoRA素材</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 风格模式上传界面 -->
+                    <div id="styleMode" style="display: none;">
+                        <div class="card">
+                            <div class="style-upload-mode">
+                                <h3 style="color: #7b68ee; margin-bottom: 30px;">🎨 风格素材上传</h3>
+                                <div class="upload-area" onclick="document.getElementById('styleUpload').click()">
+                                    <div class="upload-icon">📁</div>
+                                    <h4 style="color: #e0e0e0; margin-bottom: 16px;">拖拽或点击上传风格图片</h4>
+                                    <p style="color: #a0a0a0; margin-bottom: 12px;">支持批量上传JPG、PNG格式</p>
+                                    <p style="color: #888; font-size: 14px;">建议上传20-50张风格一致的图片</p>
+                                    <input type="file" id="styleUpload" class="hidden-file-input" multiple
+                                        accept="image/*" onchange="handleStyleUpload(this)">
+                                </div>
+                                <div style="margin-top: 40px;">
+                                    <button class="btn btn-primary" onclick="processStyleImages()">🔄 处理上传图片</button>
+                                    <button class="btn btn-secondary" onclick="backToNormalMode()">← 返回普通模式</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模块2: LoRA训练模块 -->
+                <div class="tab-content">
+                    <!-- 参数导入导出 -->
+                    <div class="card">
+                        <h3>📋 参数管理</h3>
+                        <div class="params-management">
+                            <div class="params-actions">
+                                <button class="btn btn-secondary btn-small" onclick="exportParams()">📤
+                                    导出参数JSON</button>
+                                <button class="btn btn-secondary btn-small"
+                                    onclick="document.getElementById('paramImport').click()">📥 导入参数JSON</button>
+                                <button class="btn btn-secondary btn-small" onclick="resetParams()">🔄 重置为默认</button>
+                                <button class="btn btn-secondary btn-small" onclick="saveAsTemplate()">💾 保存为模板</button>
+                                <input type="file" id="paramImport" class="hidden-file-input" accept=".json"
+                                    onchange="importParams(this)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>⚙️ 基础参数配置</h3>
+
+                            <div class="form-group">
+                                <label>基础模型</label>
+                                <select class="select-field">
+                                    <option>SDXL-1.0</option>
+                                    <option>FLUX-Dev</option>
+                                    <option>SD-1.5</option>
+                                </select>
+                            </div>
+
+                            <div class="parameter-group">
+                                <div class="form-group">
+                                    <label>训练步数 (Epochs)</label>
+                                    <input type="number" class="input-field" value="10" min="1" max="100">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>批次大小 (Batch Size)</label>
+                                    <input type="number" class="input-field" value="4" min="1" max="16">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>学习率 (Learning Rate): <span class="learning-rate-display"
+                                        id="learningRateDisplay">1e-4</span></label>
+                                <div class="slider-container">
+                                    <input type="range" class="slider" id="learningRateSlider" min="0.00001" max="0.01"
+                                        step="0.00001" value="0.0001" onchange="updateLearningRate(this)">
+                                </div>
+                                <div
+                                    style="display: flex; justify-content: space-between; color: #888; font-size: 12px; margin-top: 8px;">
+                                    <span>1e-5</span>
+                                    <span>1e-2</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>优化器</label>
+                                <select class="select-field">
+                                    <option>AdamW</option>
+                                    <option>AdamW8bit</option>
+                                    <option>Lion</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>🔧 高级参数</h3>
+
+                            <div class="collapsible" onclick="toggleCollapsible(this)">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>展开高级设置</span>
+                                    <span>▼</span>
+                                </div>
+                                <div class="collapsible-content">
+                                    <!-- 样本设置 -->
+                                    <div style="margin-bottom: 24px;">
+                                        <h4 style="color: #7b68ee; margin-bottom: 16px; font-size: 16px;">📐 样本设置</h4>
+                                        <div class="advanced-params">
+                                            <div class="param-compact">
+                                                <label>分辨率宽度</label>
+                                                <input type="number" class="input-field" value="1024" min="512"
+                                                    max="2048" step="64">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>分辨率高度</label>
+                                                <input type="number" class="input-field" value="1024" min="512"
+                                                    max="2048" step="64">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>随机种子</label>
+                                                <input type="number" class="input-field" value="1000000001" min="-1"
+                                                    max="4294967295">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>采样方法</label>
+                                                <select class="select-field">
+                                                    <option>Euler</option>
+                                                    <option>Euler a</option>
+                                                    <option>DPM++ 2M</option>
+                                                    <option>DPM++ SDE</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 保存设置 -->
+                                    <div style="margin-bottom: 24px;">
+                                        <h4 style="color: #7b68ee; margin-bottom: 16px; font-size: 16px;">💾 保存设置</h4>
+                                        <div class="advanced-params">
+                                            <div class="param-compact">
+                                                <label>保存频率-LoRA</label>
+                                                <input type="number" class="input-field" value="1" min="1" max="100">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>LoRA保存精度</label>
+                                                <select class="select-field">
+                                                    <option>fp16</option>
+                                                    <option>bf16</option>
+                                                    <option>fp32</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 学习率&优化器 -->
+                                    <div style="margin-bottom: 24px;">
+                                        <h4 style="color: #7b68ee; margin-bottom: 16px; font-size: 16px;">📊 学习率&优化器
+                                        </h4>
+                                        <div class="advanced-params">
+                                            <div class="param-compact">
+                                                <label>Unet学习率</label>
+                                                <input type="number" class="input-field" value="0.0008" min="0.00001"
+                                                    max="0.01" step="0.0001">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>Text encoder学习率</label>
+                                                <input type="number" class="input-field" value="0.00001" min="0.00001"
+                                                    max="0.001" step="0.00001">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>学习率预热(步)</label>
+                                                <input type="number" class="input-field" value="0" min="0" max="1000">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>学习率调度器</label>
+                                                <select class="select-field">
+                                                    <option>cosine_with_restarts</option>
+                                                    <option>cosine</option>
+                                                    <option>linear</option>
+                                                    <option>constant</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>优化器</label>
+                                                <select class="select-field">
+                                                    <option>AdamW8bit</option>
+                                                    <option>AdamW</option>
+                                                    <option>Lion</option>
+                                                    <option>SGD</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>重启次数</label>
+                                                <input type="number" class="input-field" value="1" min="1" max="10">
+                                            </div>
+
+                                            <div class="param-compact"
+                                                style="display: flex; align-items: center; gap: 12px;">
+                                                <label style="margin-bottom: 0;">只训练Unet</label>
+                                                <label class="switch">
+                                                    <input type="checkbox">
+                                                    <span class="slider-switch"></span>
+                                                </label>
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>最小学习率</label>
+                                                <input type="number" class="input-field" value="0" min="0" max="0.001"
+                                                    step="0.00001">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 网络 -->
+                                    <div style="margin-bottom: 24px;">
+                                        <h4 style="color: #7b68ee; margin-bottom: 16px; font-size: 16px;">🔗 网络</h4>
+                                        <div class="advanced-params">
+                                            <div class="param-compact">
+                                                <label>网络维度 (Rank)</label>
+                                                <input type="number" class="input-field" value="32" min="1" max="128">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>网络 Alpha</label>
+                                                <input type="number" class="input-field" value="32" min="1" max="128">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 打标设置 -->
+                                    <div style="margin-bottom: 24px;">
+                                        <h4 style="color: #7b68ee; margin-bottom: 16px; font-size: 16px;">🏷️ 打标设置</h4>
+                                        <div class="advanced-params">
+                                            <div class="param-compact">
+                                                <label>保存Token</label>
+                                                <input type="number" class="input-field" value="0" min="0" max="512">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>最大Token定义</label>
+                                                <select class="select-field">
+                                                    <option>75</option>
+                                                    <option>150</option>
+                                                    <option>225</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 噪声设置 -->
+                                    <div style="margin-bottom: 24px;">
+                                        <h4 style="color: #7b68ee; margin-bottom: 16px; font-size: 16px;">🔊 噪声设置</h4>
+                                        <div class="advanced-params">
+                                            <div class="param-compact">
+                                                <label>噪声调度</label>
+                                                <input type="number" class="input-field" value="0.1" min="0" max="1"
+                                                    step="0.01">
+                                            </div>
+
+                                            <div class="param-compact"
+                                                style="display: flex; align-items: center; gap: 12px;">
+                                                <label style="margin-bottom: 0;">多分辨率噪声</label>
+                                                <label class="switch">
+                                                    <input type="checkbox">
+                                                    <span class="slider-switch"></span>
+                                                </label>
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>噪声比例</label>
+                                                <input type="number" class="input-field" value="0" min="0" max="1"
+                                                    step="0.1">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 高级设置 -->
+                                    <div style="margin-bottom: 24px;">
+                                        <h4 style="color: #7b68ee; margin-bottom: 16px; font-size: 16px;">⚙️ 高级设置</h4>
+                                        <div class="advanced-params">
+                                            <div class="param-compact">
+                                                <label>随机种子</label>
+                                                <input type="number" class="input-field" value="-1" min="-1"
+                                                    max="4294967295">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>Clip跳过</label>
+                                                <input type="number" class="input-field" value="1" min="1" max="4">
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>混合精度</label>
+                                                <select class="select-field">
+                                                    <option>fp16</option>
+                                                    <option>bf16</option>
+                                                    <option>none</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="param-compact">
+                                                <label>梯度裁剪</label>
+                                                <input type="number" class="input-field" value="1.0" min="0" max="10"
+                                                    step="0.1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid">
+                        <div class="card">
+                            <h3>📊 训练监控</h3>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <span>训练进度</span>
+                                <span class="status-indicator status-training">训练中</span>
+                            </div>
+
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 35%;"></div>
+                            </div>
+
+                            <p style="color: #a0a0a0; margin: 16px 0;">
+                                当前: 350/1000 步 | 预计剩余: 15分钟<br>
+                                当前学习率: <span id="currentLearningRate">1e-4</span> | 损失值: 0.125
+                            </p>
+
+                            <div class="chart-container">
+                                <div style="color: #888;">损失值曲线图</div>
+                            </div>
+
+                            <!-- 新增：训练过程出图展示 -->
+                            <div class="training-preview">
+                                <h4 style="color: #00ff88; margin-bottom: 12px;">🖼️ 训练过程预览</h4>
+                                <p style="color: #a0a0a0; font-size: 14px; margin-bottom: 12px;">每100步生成测试图片</p>
+                                <div class="preview-grid">
+                                    <div class="preview-image">
+                                        <div>Step 100</div>
+                                        <div style="font-size: 10px; margin-top: 4px;">Loss: 0.485</div>
+                                    </div>
+                                    <div class="preview-image">
+                                        <div>Step 200</div>
+                                        <div style="font-size: 10px; margin-top: 4px;">Loss: 0.267</div>
+                                    </div>
+                                    <div class="preview-image">
+                                        <div>Step 300</div>
+                                        <div style="font-size: 10px; margin-top: 4px;">Loss: 0.189</div>
+                                    </div>
+                                    <div class="preview-image">
+                                        <div>Step 350</div>
+                                        <div style="font-size: 10px; margin-top: 4px;">Loss: 0.152</div>
+                                    </div>
+                                    <div class="preview-image">
+                                        <div>Step 400</div>
+                                        <div style="font-size: 10px; margin-top: 4px;">生成中...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="text-align: center;">
+                                <button class="btn btn-danger">⏸️ 暂停训练</button>
+                                <button class="btn btn-secondary">💾 保存检查点</button>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <h3>📝 训练日志</h3>
+                            <div class="log-container">
+                                <div style="color: #00ff88;">[2024-01-15 14:30:25] 开始训练...</div>
+                                <div style="color: #a0a0a0;">[2024-01-15 14:30:26] 加载训练数据: 45张图片</div>
+                                <div style="color: #a0a0a0;">[2024-01-15 14:30:27] 初始化网络: Rank=32, Alpha=16</div>
+                                <div style="color: #ffc107;">[2024-01-15 14:30:28] Epoch 1/10 开始</div>
+                                <div style="color: #a0a0a0;">[2024-01-15 14:30:29] Step 1/1000, Loss: 0.485</div>
+                                <div style="color: #a0a0a0;">[2024-01-15 14:30:30] Step 2/1000, Loss: 0.467</div>
+                                <div style="color: #a0a0a0;">[2024-01-15 14:30:31] Step 3/1000, Loss: 0.451</div>
+                                <div style="color: #00ff88;">[2024-01-15 14:32:15] 保存检查点: checkpoint-100.safetensors
+                                </div>
+                                <div style="color: #7b68ee;">[2024-01-15 14:33:20] 生成预览图片: step-100.png</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>🗂️ 模型管理</h3>
+                        <div class="model-list">
+                            <div class="model-item">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <h4 style="color: #00ff88;">Portrait_Style_v1</h4>
+                                        <p style="color: #a0a0a0; margin: 8px 0;">基础模型: SDXL | 训练日期: 2024-01-15 | 总步数:
+                                            1000</p>
+                                        <div class="tag-container" style="margin: 8px 0;">
+                                            <div class="tag">checkpoint-200</div>
+                                            <div class="tag">checkpoint-500</div>
+                                            <div class="tag selected">checkpoint-1000</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-small btn-secondary">预览</button>
+                                        <button class="btn btn-primary">🧪 测试</button>
+                                        <button class="btn btn-secondary">⏩ 继续训练</button>
+                                        <button class="btn btn-danger">🗑️ 删除</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="model-item">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <h4 style="color: #00ff88;">Anime_Style_v2</h4>
+                                        <p style="color: #a0a0a0; margin: 8px 0;">基础模型: FLUX | 训练日期: 2024-01-14 | 总步数:
+                                            800</p>
+                                        <div class="tag-container" style="margin: 8px 0;">
+                                            <div class="tag">checkpoint-400</div>
+                                            <div class="tag selected">checkpoint-800</div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-small btn-secondary">预览</button>
+                                        <button class="btn btn-primary">🧪 测试</button>
+                                        <button class="btn btn-secondary">⏩ 继续训练</button>
+                                        <button class="btn btn-danger">🗑️ 删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模块3: LoRA测试模块 -->
+                <div class="tab-content">
+                    <div class="grid">
+                        <div class="card">
+                            <h3>🧪 测试配置</h3>
+
+                            <div class="form-group">
+                                <label>选择测试模型</label>
+                                <select class="select-field">
+                                    <option>Portrait_Style_v1 (checkpoint-1000)</option>
+                                    <option>Portrait_Style_v1 (checkpoint-500)</option>
+                                    <option>Anime_Style_v2 (checkpoint-800)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>测试提示词（支持批量生成）</label>
+                                <div class="multi-prompt-container">
+                                    <div class="prompt-set">
+                                        <h5>提示词组 1</h5>
+                                        <div class="prompt-cn">美丽女性，肖像摄影，专业照明</div>
+                                        <div class="prompt-en">beautiful woman, portrait photography, professional
+                                            lighting</div>
+                                    </div>
+                                    <div class="prompt-set">
+                                        <h5>提示词组 2</h5>
+                                        <div class="prompt-cn">时尚模特，高级时装，工作室照明</div>
+                                        <div class="prompt-en">fashion model, haute couture, studio lighting</div>
+                                    </div>
+                                    <div class="prompt-set">
+                                        <h5>提示词组 3</h5>
+                                        <div class="prompt-cn">艺术肖像，创意构图，戏剧性光影</div>
+                                        <div class="prompt-en">artistic portrait, creative composition, dramatic
+                                            lighting</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 12px;">
+                                    <button class="btn btn-small btn-secondary">+ 添加提示词组</button>
+                                    <button class="btn btn-small btn-primary">🎲 随机生成提示词</button>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>LoRA权重范围</label>
+                                <div class="parameter-group">
+                                    <div>
+                                        <label style="font-size: 14px;">最小权重</label>
+                                        <input type="number" class="input-field" value="0.5" min="0" max="2" step="0.1">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 14px;">最大权重</label>
+                                        <input type="number" class="input-field" value="1.5" min="0" max="2" step="0.1">
+                                    </div>
+                                    <div>
+                                        <label style="font-size: 14px;">步长</label>
+                                        <input type="number" class="input-field" value="0.25" min="0.1" max="1"
+                                            step="0.05">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary">🚀 开始批量测试</button>
+                        </div>
+
+                        <div class="card">
+                            <h3>⚙️ 生成参数</h3>
+
+                            <div class="parameter-group">
+                                <div class="form-group">
+                                    <label>采样步数</label>
+                                    <input type="number" class="input-field" value="20" min="1" max="100">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>CFG Scale</label>
+                                    <input type="number" class="input-field" value="7.5" min="1" max="20" step="0.5">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>图片尺寸</label>
+                                <select class="select-field">
+                                    <option>512x512</option>
+                                    <option>768x768</option>
+                                    <option>1024x1024</option>
+                                    <option>512x768</option>
+                                    <option>768x512</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>每组生成数量</label>
+                                <input type="number" class="input-field" value="4" min="1" max="8">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>📊 测试进度</h3>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <span>批量测试进度</span>
+                            <span class="status-indicator status-training">生成中</span>
+                        </div>
+
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 60%;"></div>
+                        </div>
+
+                        <p style="color: #a0a0a0; margin: 16px 0;">
+                            当前权重: 1.0 | 已完成: 6/9 组 | 预计剩余: 8分钟
+                        </p>
+                    </div>
+
+                    <div class="card">
+                        <h3>🖼️ 测试结果</h3>
+                        <div style="margin-bottom: 20px;">
+                            <div class="tag-container">
+                                <div class="tag selected">权重 0.5</div>
+                                <div class="tag">权重 0.75</div>
+                                <div class="tag">权重 1.0</div>
+                                <div class="tag">权重 1.25</div>
+                                <div class="tag">权重 1.5</div>
+                            </div>
+                        </div>
+
+                        <div class="image-grid">
+                            <div class="image-card">
+                                <div class="image-placeholder">权重 0.5<br>提示词组1<br>已完成</div>
+                            </div>
+                            <div class="image-card">
+                                <div class="image-placeholder">权重 0.5<br>提示词组2<br>已完成</div>
+                            </div>
+                            <div class="image-card">
+                                <div class="image-placeholder">权重 0.5<br>提示词组3<br>已完成</div>
+                            </div>
+                            <div class="image-card">
+                                <div class="image-placeholder">权重 0.5<br>提示词组4<br>生成中...</div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 24px;">
+                            <button class="btn btn-primary">💾 保存所有结果</button>
+                            <button class="btn btn-secondary">📊 生成对比报告</button>
+                            <button class="btn btn-secondary">🔄 重新生成</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let loraCount = 1;
+        let currentMaterialType = 'person';
+
+        // 项目管理相关函数
+        function addNewProject() {
+            const projectName = prompt('请输入项目名称:');
+            if (projectName) {
+                const projectList = document.getElementById('projectList');
+                const newProject = document.createElement('div');
+                newProject.className = 'project-item';
+                newProject.onclick = () => selectProject(newProject);
+                newProject.innerHTML = `
+                    <div class="project-actions">
+                        <button class="action-btn edit" onclick="editProject(event, this)" title="编辑">✎</button>
+                        <button class="action-btn remove" onclick="deleteProject(event, this)" title="删除">×</button>
+                    </div>
+                    <h4>${projectName}</h4>
+                    <p>素材类型: 未设置<br>创建时间: ${new Date().toLocaleDateString()}<br>状态: 新建</p>
+                `;
+                projectList.appendChild(newProject);
+                selectProject(newProject);
+            }
+        }
+
+        // 侧边栏折叠控制
+        function toggleSidebar() {
+            const sidebar = document.getElementById('projectSidebar');
+            sidebar.classList.toggle('collapsed');
+
+            // 可选：保存折叠状态到localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', isCollapsed);
+        }
+
+        // 页面加载时恢复折叠状态
+        document.addEventListener('DOMContentLoaded', function () {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                document.getElementById('projectSidebar').classList.add('collapsed');
+            }
+
+            updateSelectedCount();
+            updateAnnotatedCount();
+        });
+
+        // 修改原有的addNewProject函数，支持折叠状态
+        function addNewProject() {
+            const projectName = prompt('请输入项目名称:');
+            if (projectName) {
+                const projectList = document.getElementById('projectList');
+                const newProject = document.createElement('div');
+                newProject.className = 'project-item';
+                newProject.onclick = () => selectProject(newProject);
+
+                // 根据项目名称智能选择图标
+                let icon = '📁'; // 默认图标
+                if (projectName.includes('人物') || projectName.includes('肖像')) {
+                    icon = '👤';
+                } else if (projectName.includes('风格') || projectName.includes('动漫')) {
+                    icon = '🎨';
+                } else if (projectName.includes('场景') || projectName.includes('风景')) {
+                    icon = '🏞️';
+                }
+
+                newProject.innerHTML = `
+            <div class="project-actions">
+                <button class="action-btn edit" onclick="editProject(event, this)" title="编辑">✎</button>
+                <button class="action-btn remove" onclick="deleteProject(event, this)" title="删除">×</button>
+            </div>
+            <div class="project-icon">${icon}</div>
+            <div class="project-content">
+                <h4>${projectName}</h4>
+                <p>素材类型: 未设置<br>创建时间: ${new Date().toLocaleDateString()}<br>状态: 新建</p>
+            </div>
+        `;
+
+                // 设置title属性用于折叠状态的提示
+                newProject.title = projectName;
+
+                projectList.appendChild(newProject);
+                selectProject(newProject);
+            }
+        }
+
+        function selectProject(element) {
+            document.querySelectorAll('.project-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        function editProject(event, button) {
+            event.stopPropagation();
+            const projectItem = button.closest('.project-item');
+            const projectName = projectItem.querySelector('h4').textContent;
+            const newName = prompt('修改项目名称:', projectName);
+            if (newName) {
+                projectItem.querySelector('h4').textContent = newName;
+            }
+        }
+
+        function deleteProject(event, button) {
+            event.stopPropagation();
+            if (confirm('确定要删除这个项目吗？')) {
+                button.closest('.project-item').remove();
+            }
+        }
+
+        function switchTab(index) {
+            // 移除所有活动状态
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            // 添加活动状态
+            document.querySelectorAll('.tab')[index].classList.add('active');
+            document.querySelectorAll('.tab-content')[index].classList.add('active');
+        }
+
+        function selectMaterialType(element, type) {
+            // 移除所有选中状态（单选）
+            document.querySelectorAll('.tag-container .tag').forEach(tag => tag.classList.remove('selected'));
+            // 添加当前选中状态
+            element.classList.add('selected');
+
+            currentMaterialType = type;
+
+            // 根据选择的素材类型显示/隐藏特定模块
+            const generationModule = document.getElementById('generationModule');
+            const finalMaterialDisplay = document.getElementById('finalMaterialDisplay');
+
+            if (type === 'person') {
+                generationModule.style.display = 'block';
+                finalMaterialDisplay.style.display = 'block';
+            } else {
+                generationModule.style.display = 'none';
+                finalMaterialDisplay.style.display = 'none';
+            }
+
+            // 检查是否点击了风格
+            if (type === 'style') {
+                document.getElementById('normalMode').style.display = 'none';
+                document.getElementById('styleMode').style.display = 'block';
+            }
+        }
+
+        function selectCount(element, count) {
+            // 移除所有选中状态
+            element.parentElement.querySelectorAll('.count-btn').forEach(btn => btn.classList.remove('selected'));
+            // 添加当前选中状态
+            element.classList.add('selected');
+            console.log('选择生成提示词组数量:', count);
+        }
+
+        function addLoraSlot() {
+            loraCount++;
+            const loraSelection = document.getElementById('loraSelection');
+            const newLoraItem = document.createElement('div');
+            newLoraItem.className = 'lora-item';
+            newLoraItem.innerHTML = `
+                <div class="lora-actions">
+                    <button class="action-btn remove" onclick="removeLoraSlot(this)" title="删除LoRA">×</button>
+                </div>
+                <div class="weight-control">
+                    <select class="select-field" style="width: 200px;">
+                        <option>无</option>
+                        <option>Portrait_Style_v1</option>
+                        <option>Anime_Style_v2</option>
+                        <option>Realistic_v3</option>
+                    </select>
+                    <span class="weight-value">0.00</span>
+                    <input type="range" class="slider" style="width: 120px;" min="0" max="2" step="0.01" value="0" onchange="updateLoraWeight(this, ${loraCount - 1})">
+                </div>
+            `;
+            loraSelection.appendChild(newLoraItem);
+        }
+
+        function removeLoraSlot(button) {
+            button.closest('.lora-item').remove();
+        }
+
+        function togglePromptGroup(element) {
+            element.classList.toggle('expanded');
+            const arrow = element.querySelector('h4 span');
+            arrow.textContent = element.classList.contains('expanded') ? '▲' : '▼';
+        }
+
+        function generatePromptGroups() {
+            console.log('生成提示词组...');
+        }
+
+        function toggleImageSelection(element) {
+            element.classList.toggle('selected');
+            updateSelectedCount();
+        }
+
+        function downloadImage(event, button) {
+            event.stopPropagation();
+            console.log('下载单张图片');
+        }
+
+        function editAnnotation(event, button) {
+            event.stopPropagation();
+            console.log('编辑标注');
+        }
+
+        function batchAnnotate() {
+            const selectedImages = document.querySelectorAll('.image-card.selected');
+            selectedImages.forEach(img => {
+                if (!img.classList.contains('annotated')) {
+                    img.classList.add('annotated');
+                }
+            });
+            updateAnnotatedCount();
+            console.log('批量标注完成');
+        }
+
+        function updateSelectedCount() {
+            const selected = document.querySelectorAll('.image-card.selected').length;
+            document.getElementById('selectedCount').textContent = selected;
+        }
+
+        function updateAnnotatedCount() {
+            const annotated = document.querySelectorAll('.image-card.annotated').length;
+            document.getElementById('annotatedCount').textContent = annotated;
+        }
+
+        function toggleCollapsible(element) {
+            element.classList.toggle('active');
+            const arrow = element.querySelector('span:last-child');
+            arrow.textContent = element.classList.contains('active') ? '▲' : '▼';
+        }
+
+        function updateLearningRate(slider) {
+            const value = parseFloat(slider.value);
+            const display = document.getElementById('learningRateDisplay');
+            const currentRate = document.getElementById('currentLearningRate');
+
+            // 格式化学习率显示
+            let formattedValue;
+            if (value >= 0.001) {
+                formattedValue = value.toFixed(3);
+            } else if (value >= 0.0001) {
+                formattedValue = value.toFixed(4);
+            } else {
+                formattedValue = value.toExponential(0);
+            }
+
+            display.textContent = formattedValue;
+            if (currentRate) {
+                currentRate.textContent = formattedValue;
+            }
+        }
+
+        function updateLoraWeight(slider, index) {
+            const value = parseFloat(slider.value);
+            const weightDisplay = slider.previousElementSibling;
+            weightDisplay.textContent = value.toFixed(1);
+        }
+
+        // 新增函数
+        function handleReferenceUpload(input) {
+            if (input.files && input.files[0]) {
+                const uploadArea = input.parentElement;
+                uploadArea.classList.add('has-image');
+                uploadArea.innerHTML = `
+                    <div style="font-size: 2rem; color: #00ff88; margin-bottom: 12px;">✓</div>
+                    <p style="color: #00ff88; margin-bottom: 8px;">图片上传成功</p>
+                    <p style="color: #a0a0a0; font-size: 14px;">${input.files[0].name}</p>
+                `;
+                console.log('参考图片上传:', input.files[0].name);
+            }
+        }
+
+        function extractPromptFromImage() {
+            console.log('从图片反推提示词');
+            alert('正在分析图片，生成提示词...');
+        }
+
+        function generateFromImage() {
+            console.log('使用图片生成素材');
+            alert('正在使用参考图片进行图生图...');
+        }
+
+        function selectImageParams(groupId) {
+            console.log('使用选中图片参数修改提示词组:', groupId);
+            alert('已应用选中图片的生成参数到提示词组');
+        }
+
+        function segmentMaterials() {
+            console.log('切分素材');
+            alert('正在切分上一步选择的素材...');
+        }
+
+        function downloadAllSegments() {
+            console.log('下载所有切分图片');
+            alert('正在准备下载所有切分后的图片...');
+        }
+
+        function generateHeadshots() {
+            console.log('生成带背景大头图');
+            alert('正在生成带背景的人物大头多表情图片...');
+        }
+
+        function generatePureHeadshots() {
+            console.log('生成纯白背景大头图');
+            alert('正在生成纯白背景的人物大头多表情图片...');
+        }
+
+        function batchAnnotateFinal() {
+            console.log('批量标注最终素材');
+            const selectedImages = document.querySelectorAll('#finalMaterialDisplay .image-card.selected');
+            selectedImages.forEach(img => {
+                if (!img.classList.contains('annotated')) {
+                    img.classList.add('annotated');
+                    const placeholder = img.querySelector('.image-placeholder div:last-child');
+                    placeholder.textContent = '已标注';
+                }
+            });
+            alert('批量标注完成');
+        }
+
+        function previewTrainingData() {
+            console.log('预览训练数据');
+            alert('正在准备训练数据预览...');
+        }
+
+        function sendToTraining() {
+            console.log('发送训练LoRA素材');
+            alert('训练素材已发送到LoRA训练模块');
+            // 自动切换到训练标签
+            switchTab(1);
+        }
+
+        function handleStyleUpload(input) {
+            if (input.files && input.files.length > 0) {
+                console.log('风格图片上传:', input.files.length, '张');
+                alert(`已上传 ${input.files.length} 张风格图片`);
+            }
+        }
+
+        function processStyleImages() {
+            console.log('处理风格图片');
+            alert('正在处理上传的风格图片...');
+            // 处理完成后跳转到训练
+            setTimeout(() => {
+                switchTab(1);
+            }, 2000);
+        }
+
+        function backToNormalMode() {
+            document.getElementById('normalMode').style.display = 'block';
+            document.getElementById('styleMode').style.display = 'none';
+            // 重置素材类型选择
+            document.querySelectorAll('.tag-container .tag').forEach(tag => tag.classList.remove('selected'));
+            document.querySelector('.tag-container .tag').classList.add('selected');
+            currentMaterialType = 'person';
+        }
+
+        // 参数管理函数
+        function exportParams() {
+            const params = {
+                baseModel: 'SDXL-1.0',
+                epochs: 10,
+                batchSize: 4,
+                learningRate: 0.0001,
+                optimizer: 'AdamW',
+                // 添加更多参数...
+            };
+
+            const dataStr = JSON.stringify(params, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'lora_training_params.json';
+            link.click();
+
+            console.log('导出参数JSON');
+        }
+
+        function importParams(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const params = JSON.parse(e.target.result);
+                        console.log('导入参数:', params);
+                        alert('参数导入成功！');
+                        // 这里应该应用导入的参数到界面
+                    } catch (error) {
+                        alert('JSON文件格式错误！');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function resetParams() {
+            if (confirm('确定要重置所有参数为默认值吗？')) {
+                console.log('重置参数为默认值');
+                alert('参数已重置为默认值');
+            }
+        }
+
+        function saveAsTemplate() {
+            const templateName = prompt('请输入模板名称:');
+            if (templateName) {
+                console.log('保存为模板:', templateName);
+                alert(`模板 "${templateName}" 保存成功！`);
+            }
+        }
+
+        // 初始化计数
+        document.addEventListener('DOMContentLoaded', function () {
+            updateSelectedCount();
+            updateAnnotatedCount();
+        });
+    </script>
+</body>
+
+</html>
