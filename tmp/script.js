@@ -1,75 +1,202 @@
-// 打字机效果实现
-class Typewriter {
-    constructor(element, texts, options = {}) {
-        this.element = element;
-        this.texts = texts;
-        this.speed = options.speed || 100;
-        this.deleteSpeed = options.deleteSpeed || 50;
-        this.pauseTime = options.pauseTime || 2000;
-        this.currentTextIndex = 0;
-        this.currentCharIndex = 0;
-        this.isDeleting = false;
-        this.isPaused = false;
+// 双打字机效果实现
+class DualTypewriter {
+    constructor() {
+        this.typewriters = {
+            main: {
+                element: document.getElementById('mainTypewriter'),
+                texts: [
+                    '重构创作链路，助力量产',
+                    '驱动内容创新，赋能创作',
+                    '智能化制作，专业级输出',
+                    '革新动漫产业，引领未来'
+                ],
+                currentIndex: 0,
+                isDeleting: false,
+                speed: 100
+            }
+        };
+        this.isRunning = false;
     }
 
-    type() {
-        const currentText = this.texts[this.currentTextIndex];
-        
-        if (this.isPaused) {
-            setTimeout(() => {
-                this.isPaused = false;
-                this.type();
-            }, this.pauseTime);
-            return;
-        }
+    typeText(typewriterKey) {
+        const typewriter = this.typewriters[typewriterKey];
+        if (!typewriter.element) return;
 
-        if (this.isDeleting) {
-            // 删除字符
-            this.element.textContent = currentText.substring(0, this.currentCharIndex - 1);
-            this.currentCharIndex--;
+        const currentText = typewriter.texts[typewriter.currentIndex];
+        const currentLength = typewriter.element.textContent.length;
 
-            if (this.currentCharIndex === 0) {
-                this.isDeleting = false;
-                this.currentTextIndex = (this.currentTextIndex + 1) % this.texts.length;
+        if (!typewriter.isDeleting) {
+            // 添加字符
+            if (currentLength < currentText.length) {
+                typewriter.element.textContent = currentText.substring(0, currentLength + 1);
+                setTimeout(() => this.typeText(typewriterKey), typewriter.speed);
+            } else {
+                // 完成输入，等待后开始删除
+                setTimeout(() => {
+                    typewriter.isDeleting = true;
+                    this.typeText(typewriterKey);
+                }, 2000);
             }
         } else {
-            // 添加字符
-            this.element.textContent = currentText.substring(0, this.currentCharIndex + 1);
-            this.currentCharIndex++;
-
-            if (this.currentCharIndex === currentText.length) {
-                this.isDeleting = true;
-                this.isPaused = true;
+            // 删除字符
+            if (currentLength > 0) {
+                typewriter.element.textContent = currentText.substring(0, currentLength - 1);
+                setTimeout(() => this.typeText(typewriterKey), typewriter.speed / 2);
+            } else {
+                // 完成删除，切换到下一个文本
+                typewriter.isDeleting = false;
+                typewriter.currentIndex = (typewriter.currentIndex + 1) % typewriter.texts.length;
+                setTimeout(() => this.typeText(typewriterKey), 500);
             }
         }
-
-        const speed = this.isDeleting ? this.deleteSpeed : this.speed;
-        setTimeout(() => this.type(), speed);
     }
 
     start() {
-        this.type();
+        if (this.isRunning) return;
+        this.isRunning = true;
+        
+        // 启动主打字机
+        this.typeText('main');
+    }
+
+    stop() {
+        this.isRunning = false;
     }
 }
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
-    // 初始化打字机效果
-    const typewriterElement = document.getElementById('typewriter');
-    const texts = [
-        '创造无限可能的AI动漫世界',
-        '让想象力成为现实',
-        '开启你的创作之旅',
-        '体验未来的艺术创作'
-    ];
+    // 初始化双打字机效果
+    const dualTypewriter = new DualTypewriter();
+    dualTypewriter.start();
     
-    const typewriter = new Typewriter(typewriterElement, texts, {
-        speed: 120,
-        deleteSpeed: 60,
-        pauseTime: 2500
-    });
+    // 滚动交互控制 - 简化版本，只保留轻微缩放效果
+    let hasTriggeredLogin = false;
+    const loginModal = document.getElementById('loginModal');
+    const floatingCards = document.querySelectorAll('.floating-card');
+    const heroContent = document.querySelector('.hero-content');
     
-    typewriter.start();
+    function handleScroll() {
+        const scrollY = window.scrollY;
+        const scatterStartPoint = 100; // 滚动100px后开始散开动画
+        const scatterEndPoint = 500; // 滚动500px时完全散开
+        const loginTriggerPoint = 600; // 滚动600px后触发登录窗口
+        
+        // 卡片散开动画逻辑
+        floatingCards.forEach((card, index) => {
+            if (scrollY >= scatterStartPoint) {
+                card.classList.add('scroll-scatter');
+                
+                // 计算散开进度 (0到1之间)
+                const scatterProgress = Math.min((scrollY - scatterStartPoint) / (scatterEndPoint - scatterStartPoint), 1);
+                
+                // 根据滚动进度调整透明度和位移
+                const opacity = Math.max(1 - scatterProgress, 0);
+                const scale = Math.max(1 - scatterProgress * 0.7, 0.3);
+                
+                // 为每个卡片设置不同的散开方向
+                let translateX, translateY, rotation;
+                switch(index) {
+                    case 0: // card-1 AI绘画 向左上散开
+                        translateX = -scatterProgress * 600;
+                        translateY = -scatterProgress * 400;
+                        rotation = -scatterProgress * 45;
+                        break;
+                    case 1: // card-2 智能生成 向右上散开
+                        translateX = scatterProgress * 700;
+                        translateY = -scatterProgress * 350;
+                        rotation = scatterProgress * 50;
+                        break;
+                    case 2: // card-3 快速创作 向左下散开
+                        translateX = -scatterProgress * 500;
+                        translateY = scatterProgress * 600;
+                        rotation = -scatterProgress * 35;
+                        break;
+                }
+                
+                card.style.transform = `translateX(${translateX}px) translateY(${translateY}px) scale(${scale}) rotate(${rotation}deg)`;
+                card.style.opacity = opacity;
+            } else {
+                card.classList.remove('scroll-scatter');
+                card.style.transform = '';
+                card.style.opacity = '';
+            }
+        });
+        
+        // 登录窗口显示逻辑
+        if (scrollY > loginTriggerPoint && !hasTriggeredLogin) {
+            hasTriggeredLogin = true;
+            
+            // 延迟显示登录窗口
+            setTimeout(() => {
+                if (loginModal) {
+                    loginModal.classList.add('show');
+                }
+            }, 300);
+        } else if (scrollY <= loginTriggerPoint && hasTriggeredLogin) {
+            hasTriggeredLogin = false;
+            
+            // 隐藏登录窗口
+            if (loginModal) {
+                loginModal.classList.remove('show');
+            }
+        }
+        
+        // 左侧内容位置和缩放效果
+        if (heroContent) {
+            const maxScroll = 500; // 增加过渡距离，让动画更平滑
+            const progress = Math.min(scrollY / maxScroll, 1); // 0到1的进度
+            
+            // 缩放效果：从1缩小到0.8
+            const scaleValue = 1 - (progress * 0.2);
+            
+            // 水平位置：从50%（居中）移动到左侧
+            const leftValue = 50 - (progress * 35); // 50% -> 15%
+            const finalLeft = `${Math.max(leftValue, 15)}%`; // 最小15%，避免移出屏幕
+            
+            // 垂直位置：从50%移动到40%
+            const topValue = 50 - (progress * 10); // 50% -> 40%
+            
+            // 文本对齐：使用更平滑的过渡点
+            const alignmentProgress = Math.max(0, (progress - 0.3) / 0.4); // 从30%开始，到70%完成
+            const smoothAlignment = alignmentProgress > 0 ? 'left' : 'center';
+            heroContent.style.textAlign = smoothAlignment;
+            
+            // 根据滚动进度调整transform：使用更平滑的过渡
+            const transformProgress = Math.max(0, (progress - 0.3) / 0.4); // 从30%开始过渡
+            if (transformProgress <= 0) {
+                // 滚动前30%：保持居中对齐
+                heroContent.style.transform = `translate(-50%, -50%) scale(${scaleValue})`;
+            } else if (transformProgress < 1) {
+                // 滚动30%-70%：平滑过渡
+                const translateX = -50 + (transformProgress * 50); // 从-50%过渡到0%
+                heroContent.style.transform = `translate(${translateX}%, -50%) scale(${scaleValue})`;
+            } else {
+                // 滚动70%后：完全左对齐
+                heroContent.style.transform = `translate(0, -50%) scale(${scaleValue})`;
+            }
+            
+            heroContent.style.left = finalLeft;
+            heroContent.style.top = `${topValue}%`;
+            
+            // 按钮显示/隐藏动画
+            const heroButtons = heroContent.querySelector('.hero-buttons');
+            if (heroButtons) {
+                const buttonHidePoint = 200; // 滚动200px后开始隐藏按钮
+                const buttonProgress = Math.min(scrollY / buttonHidePoint, 1);
+                
+                // 按钮透明度和位移动画
+                const buttonOpacity = 1 - buttonProgress;
+                const buttonTranslateY = buttonProgress * 30; // 向下移动30px
+                
+                heroButtons.style.opacity = buttonOpacity;
+                heroButtons.style.transform = `translateY(${buttonTranslateY}px)`;
+                heroButtons.style.pointerEvents = buttonOpacity > 0.1 ? 'auto' : 'none';
+            }
+        }
+    }
+    
+    window.addEventListener('scroll', handleScroll);
 
     // 平滑滚动效果
     function smoothScroll(target, duration = 1000) {
@@ -127,39 +254,69 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 作品展示区域点击事件
-    const galleryItems = document.querySelectorAll('.gallery-item');
-    galleryItems.forEach(item => {
-        item.addEventListener('click', function() {
-            const title = this.querySelector('span').textContent;
-            showNotification(`查看${title}详情功能即将上线！`, 'info');
+
+
+
+
+    // 登录窗口交互事件
+    const loginInputs = document.querySelectorAll('.login-input');
+    const loginBtn = document.querySelector('.login-btn');
+    const socialBtns = document.querySelectorAll('.social-btn');
+    const registerLink = document.querySelector('.register-link');
+    
+    // 登录按钮点击事件
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function() {
+            const email = document.querySelector('input[type="email"]').value;
+            const password = document.querySelector('input[type="password"]').value;
+            
+            if (!email || !password) {
+                showNotification('请填写完整的登录信息', 'warning');
+                return;
+            }
+            
+            // 模拟登录过程
+            this.textContent = '登录中...';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                showNotification('登录功能即将上线！', 'info');
+                this.textContent = '立即登录';
+                this.disabled = false;
+            }, 2000);
+        });
+    }
+    
+    // 社交登录按钮事件
+    socialBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const platform = this.classList.contains('google-btn') ? 'Google' : '微信';
+            showNotification(`${platform}登录功能即将上线！`, 'info');
         });
     });
-
-    // 功能卡片悬停效果增强
-    const featureCards = document.querySelectorAll('.feature-card');
-    featureCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-10px) scale(1.02)';
+    
+    // 注册链接事件
+    if (registerLink) {
+        registerLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            showNotification('注册功能即将上线！', 'info');
+        });
+    }
+    
+    // 输入框焦点效果增强
+    loginInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
         });
         
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
         });
     });
-
-    // 滚动时的视差效果
+    
+    // 导航栏背景透明度控制
     window.addEventListener('scroll', function() {
         const scrolled = window.pageYOffset;
-        const parallaxElements = document.querySelectorAll('.floating-card');
-        
-        parallaxElements.forEach((element, index) => {
-            const speed = 0.5 + (index * 0.1);
-            const yPos = -(scrolled * speed);
-            element.style.transform = `translateY(${yPos}px)`;
-        });
-
-        // 导航栏背景透明度
         const header = document.querySelector('.header');
         const opacity = Math.min(scrolled / 100, 0.95);
         header.style.background = `rgba(10, 10, 10, ${opacity})`;
@@ -294,7 +451,71 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('🎨 灵境AI - 页面加载完成！');
     console.log('✨ 欢迎来到AI动漫创作的世界！');
+    
+    // 初始化代码雨效果
+    initCodeRain();
 });
+
+// 代码雨效果
+function initCodeRain() {
+    const codeRainContainer = document.getElementById('codeRain');
+    if (!codeRainContainer) return;
+    
+    const codeChars = [
+        'function', 'const', 'let', 'var', 'class', 'import', 'export',
+        'async', 'await', 'return', 'if', 'else', 'for', 'while',
+        'try', 'catch', 'throw', 'new', 'this', 'super',
+        '{}', '[]', '()', '=>', '===', '!==', '&&', '||',
+        'AI', 'ML', 'GPU', 'API', 'JSON', 'HTTP', 'CSS', 'HTML',
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'
+    ];
+    
+    function createCodeColumn() {
+        const column = document.createElement('div');
+        column.className = 'code-column';
+        
+        // 随机位置
+        column.style.left = Math.random() * 100 + '%';
+        
+        // 随机速度和延迟
+        const duration = Math.random() * 3 + 2; // 2-5秒
+        const delay = Math.random() * 2; // 0-2秒延迟
+        
+        column.style.animationDuration = duration + 's';
+        column.style.animationDelay = delay + 's';
+        
+        // 生成代码内容
+        const lineCount = Math.floor(Math.random() * 8) + 5; // 5-12行
+        let content = '';
+        for (let i = 0; i < lineCount; i++) {
+            const randomChar = codeChars[Math.floor(Math.random() * codeChars.length)];
+            content += randomChar + '\n';
+        }
+        column.textContent = content;
+        
+        codeRainContainer.appendChild(column);
+        
+        // 动画结束后移除元素
+        setTimeout(() => {
+            if (column.parentNode) {
+                column.parentNode.removeChild(column);
+            }
+        }, (duration + delay) * 1000);
+    }
+    
+    // 定期创建新的代码列
+    function spawnCodeColumns() {
+        createCodeColumn();
+        
+        // 随机间隔创建下一列
+        const nextSpawn = Math.random() * 800 + 200; // 200-1000ms
+        setTimeout(spawnCodeColumns, nextSpawn);
+    }
+    
+    // 开始生成代码雨
+    spawnCodeColumns();
+}
 
 // 页面卸载时清理
 window.addEventListener('beforeunload', function() {
