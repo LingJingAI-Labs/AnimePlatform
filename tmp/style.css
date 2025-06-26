@@ -14,55 +14,58 @@ body {
     position: relative;
 }
 
-/* 代码雨背景效果 */
-.code-rain {
+/* 动态光雾背景效果 */
+.light-fog-container {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 0;
-    opacity: 0.3;
+    z-index: -1;
+    overflow: hidden;
 }
 
-.code-column {
+.light-fog {
     position: absolute;
-    top: -100%;
-    font-family: 'Courier New', monospace;
-    font-size: 14px;
-    line-height: 1.2;
-    color: #00ff41;
-    animation: fall linear infinite;
-    text-shadow: 0 0 5px rgba(0, 255, 65, 0.5);
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.4;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.6, 1);
+    animation-iteration-count: infinite;
+    will-change: transform, border-radius;
+    transform-origin: center center;
+    backface-visibility: hidden;
 }
 
-.code-column:nth-child(odd) {
-    color: #00ff41;
-    text-shadow: 0 0 8px rgba(0, 255, 65, 0.6), 0 0 15px rgba(255, 165, 0, 0.3);
+/* Anime.js 光雾效果基础样式 */
+.anime-fog {
+    position: absolute;
+    pointer-events: none;
+    will-change: transform, opacity, border-radius;
+    backface-visibility: hidden;
+    filter: blur(50px);
 }
 
-.code-column:nth-child(even) {
-    color: #ffa500;
-    text-shadow: 0 0 8px rgba(255, 165, 0, 0.6), 0 0 15px rgba(0, 255, 65, 0.3);
+.anime-particle {
+    position: absolute;
+    pointer-events: none;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 
-@keyframes fall {
-    0% {
-        transform: translateY(-100vh);
-        opacity: 0;
-    }
-    10% {
-        opacity: 1;
-    }
-    90% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(100vh);
-        opacity: 0;
-    }
+/* Anime.js 鼠标拖尾效果样式 */
+.mouse-trail {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
+
+/* 旧的CSS动画已被Anime.js替代 */
 
 /* 顶部导航栏 */
 .header {
@@ -100,6 +103,7 @@ body {
     min-height: 300vh; /* 增加页面高度以确保可以滚动 */
     position: relative;
     z-index: 10;
+    background: transparent;
 }
 
 /* 英雄区域 */
@@ -112,7 +116,8 @@ body {
     max-width: 1400px;
     margin: 0 auto;
     position: relative;
-    z-index: 20;
+    z-index: 10;
+    background: transparent;
 }
 
 /* 添加额外内容区域以确保页面可滚动 */
@@ -126,42 +131,92 @@ body {
     font-size: 1.2rem;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
+/* 响应式设计 - 平板设备 */
+@media (max-width: 1024px) {
     .hero-content {
-        max-width: 95vw;
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        max-width: 100%;
         min-width: auto;
-        padding: 0 1rem;
+        padding: 2rem 1rem;
+    }
+    
+    .hero-visual {
+        position: relative;
+        top: auto;
+        right: auto;
+        transform: none;
+        width: 100%;
+        height: 400px;
+        margin-top: 2rem;
+    }
+    
+    .login-modal {
+        left: 50%;
+        width: 380px;
+        max-width: 85vw;
+    }
+}
+
+/* 响应式设计 - 手机设备 */
+@media (max-width: 768px) {
+    .nav-container {
+        padding: 1rem;
+    }
+    
+    .hero-section {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+        min-height: auto;
+        gap: 2rem;
+    }
+    
+    .hero-content {
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        max-width: 100%;
+        min-width: auto;
+        padding: 1rem;
+        margin-top: 2rem;
     }
     
     .hero-title {
-        font-size: clamp(2rem, 8vw, 3rem);
+        font-size: clamp(1.8rem, 7vw, 2.8rem);
         margin-bottom: 1.5rem;
-        flex-direction: row;
+        flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: 0.3rem;
-        flex-wrap: nowrap;
-        white-space: nowrap;
-        overflow: hidden;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        white-space: normal;
+        overflow: visible;
+        line-height: 1.1;
     }
     
     .hero-subtitle {
         font-size: clamp(0.9rem, 4vw, 1.2rem);
         margin-bottom: 2rem;
         text-align: center;
+        padding: 0 1rem;
     }
     
     .hero-buttons {
         flex-direction: column;
         align-items: center;
-        gap: 0.8rem;
+        gap: 1rem;
+        margin-bottom: 2rem;
     }
     
     .btn {
         width: 100%;
         max-width: 280px;
-        padding: 0.9rem 1.5rem;
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
     }
     
     .cursor {
@@ -169,15 +224,169 @@ body {
         height: 1em;
         margin-left: 2px;
     }
+    
+    .hero-visual {
+        position: relative;
+        top: auto;
+        right: auto;
+        transform: none;
+        width: 100%;
+        height: 300px;
+        margin-top: 1rem;
+    }
+    
+    .floating-card {
+        position: relative;
+        margin: 1rem auto;
+        width: 200px;
+        display: block;
+        animation: none;
+    }
+    
+    .card-1, .card-2, .card-3 {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        bottom: auto;
+    }
+    
+    .login-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        right: auto;
+        width: 350px;
+        max-width: 90vw;
+        transform: translate(-50%, -50%) scale(0);
+    }
+    
+    .login-modal.show {
+        transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .login-content {
+        padding: 1.5rem;
+    }
 }
 
+/* 响应式设计 - 小屏手机 */
 @media (max-width: 480px) {
+    .hero-section {
+        padding: 0.5rem;
+        gap: 1.5rem;
+    }
+    
+    .hero-content {
+        padding: 0.5rem;
+        margin-top: 1rem;
+    }
+    
     .hero-title {
-        font-size: clamp(1.8rem, 10vw, 2.5rem);
+        font-size: clamp(1.5rem, 8vw, 2.2rem);
+        margin-bottom: 1rem;
+        gap: 0.3rem;
     }
     
     .hero-subtitle {
-        font-size: clamp(0.85rem, 5vw, 1.1rem);
+        font-size: clamp(0.85rem, 4.5vw, 1.1rem);
+        margin-bottom: 1.5rem;
+        padding: 0 0.5rem;
+    }
+    
+    .hero-buttons {
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn {
+        max-width: 250px;
+        padding: 0.9rem 1.2rem;
+        font-size: 0.9rem;
+    }
+    
+    .hero-visual {
+        height: 250px;
+        margin-top: 0.5rem;
+    }
+    
+    .floating-card {
+        width: 160px;
+        padding: 1rem;
+        margin: 0.5rem auto;
+    }
+    
+    .card-content {
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .card-icon {
+        font-size: 1.2rem;
+    }
+    
+    .login-modal {
+        width: 320px;
+        max-width: 95vw;
+    }
+    
+    .login-content {
+        padding: 1.2rem;
+    }
+    
+    .login-header h3 {
+        font-size: 1.3rem;
+    }
+    
+    .login-input {
+        padding: 0.9rem;
+        font-size: 0.95rem;
+    }
+    
+    .login-btn {
+        padding: 0.9rem;
+        font-size: 0.95rem;
+    }
+    
+    .social-login {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    
+    .social-btn {
+        padding: 0.8rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* 超小屏设备 */
+@media (max-width: 360px) {
+    .hero-title {
+        font-size: clamp(1.3rem, 9vw, 1.8rem);
+    }
+    
+    .hero-subtitle {
+        font-size: clamp(0.8rem, 5vw, 1rem);
+    }
+    
+    .btn {
+        max-width: 220px;
+        padding: 0.8rem 1rem;
+        font-size: 0.85rem;
+    }
+    
+    .login-modal {
+        width: 300px;
+        max-width: 98vw;
+    }
+    
+    .login-content {
+        padding: 1rem;
+    }
+    
+    /* 在超小屏设备上完全禁用光雾效果 */
+    .light-fog-container {
+        display: none;
     }
 }
 
@@ -220,7 +429,9 @@ body {
 .typewriter-text {
     background: linear-gradient(135deg, #00d4ff 0%, #9c27b0 50%, #ff6b35 100%);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-text-fill-color: white;
+    -webkit-text-stroke: 1px transparent;
+    -webkit-text-stroke-image: linear-gradient(135deg, #00d4ff 0%, #9c27b0 50%, #ff6b35 100%);
     background-clip: text;
     display: inline-block;
     min-height: 1.2em;
@@ -614,74 +825,7 @@ body {
     text-decoration: underline;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .nav-container {
-        padding: 1rem;
-    }
-    
-    .hero-section {
-        flex-direction: column;
-        text-align: center;
-        padding: 2rem 1rem;
-    }
-    
-    .hero-content {
-        position: relative;
-        top: auto;
-        left: auto;
-        transform: none;
-        max-width: 100%;
-        margin-bottom: 2rem;
-    }
-    
-    .hero-visual {
-        position: relative;
-        top: auto;
-        right: auto;
-        transform: none;
-        width: 100%;
-        height: 300px;
-        margin-top: 2rem;
-    }
-    
-    .hero-title {
-        font-size: 2.5rem;
-        white-space: normal;
-    }
-    
-    .login-modal {
-        position: fixed;
-        right: 1rem;
-        left: 1rem;
-        width: auto;
-        transform: translate(-50%, -50%) scale(0);
-    }
-    
-    .login-modal.show {
-        transform: translate(-50%, -50%) scale(1);
-    }
-    
-    .container {
-        padding: 0 1rem;
-    }
-}
 
-@media (max-width: 480px) {
-    .hero-title {
-        font-size: 2rem;
-    }
-    
-    .hero-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .btn {
-        width: 100%;
-        max-width: 280px;
-    }
-}
 
 /* 滚动条样式 */
 ::-webkit-scrollbar {

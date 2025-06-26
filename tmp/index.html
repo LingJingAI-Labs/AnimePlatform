@@ -6,10 +6,15 @@
     <title>灵境AI - AI动漫创作平台</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 </head>
 <body>
-    <!-- 代码雨背景效果 -->
-    <div class="code-rain" id="codeRain"></div>
+    <!-- 动态光雾背景效果 -->
+    <div class="light-fog-container">
+        <div class="light-fog fog-1"></div>
+        <div class="light-fog fog-2"></div>
+        <div class="light-fog fog-3"></div>
+    </div>
     
     <!-- 顶部导航栏 -->
     <header class="header">
@@ -96,6 +101,7 @@
 
     </main>
 
+    <script src="anime-effects.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

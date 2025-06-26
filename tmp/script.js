@@ -421,101 +421,22 @@ document.addEventListener('DOMContentLoaded', function() {
         mouseY = e.clientY;
     });
 
-    // 添加鼠标跟随光效（性能优化版本）
-    let rafId;
-    function updateMouseEffect() {
-        const cursor = document.querySelector('.mouse-effect');
-        if (cursor) {
-            cursor.style.left = mouseX + 'px';
-            cursor.style.top = mouseY + 'px';
-        }
-        rafId = requestAnimationFrame(updateMouseEffect);
-    }
+    // 旧的鼠标跟随效果已被Anime.js版本替代
 
-    // 创建鼠标跟随效果元素
-    const mouseEffect = document.createElement('div');
-    mouseEffect.className = 'mouse-effect';
-    mouseEffect.style.cssText = `
-        position: fixed;
-        width: 20px;
-        height: 20px;
-        background: radial-gradient(circle, rgba(0, 212, 255, 0.3) 0%, transparent 70%);
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 9999;
-        transition: transform 0.1s ease;
-        transform: translate(-50%, -50%);
-    `;
-    document.body.appendChild(mouseEffect);
-    updateMouseEffect();
-
+    // 初始化Anime.js效果系统
+    initAnimeEffects();
+    
     console.log('🎨 灵境AI - 页面加载完成！');
     console.log('✨ 欢迎来到AI动漫创作的世界！');
+    console.log('🌟 使用Anime.js重构的光雾粒子系统已启动！');
     
-    // 初始化代码雨效果
-    initCodeRain();
+
 });
 
-// 代码雨效果
-function initCodeRain() {
-    const codeRainContainer = document.getElementById('codeRain');
-    if (!codeRainContainer) return;
-    
-    const codeChars = [
-        'function', 'const', 'let', 'var', 'class', 'import', 'export',
-        'async', 'await', 'return', 'if', 'else', 'for', 'while',
-        'try', 'catch', 'throw', 'new', 'this', 'super',
-        '{}', '[]', '()', '=>', '===', '!==', '&&', '||',
-        'AI', 'ML', 'GPU', 'API', 'JSON', 'HTTP', 'CSS', 'HTML',
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'
-    ];
-    
-    function createCodeColumn() {
-        const column = document.createElement('div');
-        column.className = 'code-column';
-        
-        // 随机位置
-        column.style.left = Math.random() * 100 + '%';
-        
-        // 随机速度和延迟
-        const duration = Math.random() * 3 + 2; // 2-5秒
-        const delay = Math.random() * 2; // 0-2秒延迟
-        
-        column.style.animationDuration = duration + 's';
-        column.style.animationDelay = delay + 's';
-        
-        // 生成代码内容
-        const lineCount = Math.floor(Math.random() * 8) + 5; // 5-12行
-        let content = '';
-        for (let i = 0; i < lineCount; i++) {
-            const randomChar = codeChars[Math.floor(Math.random() * codeChars.length)];
-            content += randomChar + '\n';
-        }
-        column.textContent = content;
-        
-        codeRainContainer.appendChild(column);
-        
-        // 动画结束后移除元素
-        setTimeout(() => {
-            if (column.parentNode) {
-                column.parentNode.removeChild(column);
-            }
-        }, (duration + delay) * 1000);
-    }
-    
-    // 定期创建新的代码列
-    function spawnCodeColumns() {
-        createCodeColumn();
-        
-        // 随机间隔创建下一列
-        const nextSpawn = Math.random() * 800 + 200; // 200-1000ms
-        setTimeout(spawnCodeColumns, nextSpawn);
-    }
-    
-    // 开始生成代码雨
-    spawnCodeColumns();
-}
+// 旧的粒子系统已被Anime.js重构版本替代
+// 新的效果系统在 anime-effects.js 中实现
+
+
 
 // 页面卸载时清理
 window.addEventListener('beforeunload', function() {
