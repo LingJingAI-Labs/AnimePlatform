@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>创建项目 - 灵境AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+    <!-- 动态光雾背景效果 -->
+    <div class="light-fog-container">
+        <div class="light-fog fog-1"></div>
+        <div class="light-fog fog-2"></div>
+        <div class="light-fog fog-3"></div>
+    </div>
+    
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-text">灵境AI</span>
+            </div>
+            <div class="nav-actions">
+                <a href="../home/index.html" class="btn btn-secondary">返回首页</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="main-content">
+        <div class="container">
+            <!-- 页面标题 -->
+            <section class="page-header">
+                <h1 class="page-title">
+                    <span class="ai-text">创建</span> <span class="typewriter-text">AI动漫项目</span>
+                </h1>
+                <p class="page-subtitle">选择您的创作路线和制作模式，开启专业动漫制作之旅</p>
+            </section>
+
+            <!-- 滑动容器 -->
+            <div class="slide-container">
+                <!-- 路线选择页面 -->
+                <section class="slide-page route-page active">
+                    <h2 class="section-title">选择创作路线</h2>
+                    <div class="route-cards">
+                        <div class="route-card" data-route="novel">
+                            <div class="route-icon">📚</div>
+                            <h3>小说生成动漫</h3>
+                            <p>基于小说文本，AI智能生成动漫内容</p>
+                            <ul class="route-features">
+                                <li>文本解析与场景构建</li>
+                                <li>角色形象自动生成</li>
+                                <li>情节可视化呈现</li>
+                            </ul>
+                        </div>
+                        <div class="route-card" data-route="drama">
+                            <div class="route-icon">🎬</div>
+                            <h3>短剧改编动漫</h3>
+                            <p>将短剧内容转换为动漫形式</p>
+                            <ul class="route-features">
+                                <li>剧本分析与重构</li>
+                                <li>镜头语言转换</li>
+                                <li>动画风格适配</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 模式选择页面 -->
+                <section class="slide-page mode-page">
+                    <div class="mode-header-section">
+                        <h2 class="section-title">选择制作模式</h2>
+                        <!-- 创意上一步按钮 -->
+                        <div class="back-step-btn" onclick="goBackToRoute()">
+                            <div class="back-arrow">
+                                <span class="arrow-line"></span>
+                                <span class="arrow-head"></span>
+                            </div>
+                            <span class="back-text">上一步</span>
+                        </div>
+                    </div>
+                    <div class="mode-cards">
+                        <div class="mode-card" data-mode="fast">
+                            <div class="mode-header">
+                                <div class="mode-icon">⚡</div>
+                                <h3>快速模式</h3>
+                                <span class="mode-badge fast">推荐新手</span>
+                            </div>
+                            <div class="mode-preview">
+                                <div class="preview-placeholder">
+                                    <span>样片预览</span>
+                                    <div class="preview-info">快速生成效果</div>
+                                </div>
+                            </div>
+                            <div class="mode-description">
+                                <p>快速生成，适合快速验证创意</p>
+                                <ul class="mode-features">
+                                    <li>⏱️ 生成时间：5-10分钟</li>
+                                    <li>🎨 画面质量：标准</li>
+                                    <li>👥 人物一致性：一般</li>
+                                    <li>💰 成本：低</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mode-card" data-mode="standard">
+                            <div class="mode-header">
+                                <div class="mode-icon">🎯</div>
+                                <h3>标准模式</h3>
+                                <span class="mode-badge standard">平衡之选</span>
+                            </div>
+                            <div class="mode-preview">
+                                <div class="preview-placeholder">
+                                    <span>样片预览</span>
+                                    <div class="preview-info">标准质量效果</div>
+                                </div>
+                            </div>
+                            <div class="mode-description">
+                                <p>质量与效率的完美平衡</p>
+                                <ul class="mode-features">
+                                    <li>⏱️ 生成时间：15-30分钟</li>
+                                    <li>🎨 画面质量：高</li>
+                                    <li>👥 人物一致性：良好</li>
+                                    <li>🤖 LoRA训练：最多3个角色</li>
+                                    <li>💰 成本：中等</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mode-card" data-mode="advanced">
+                            <div class="mode-header">
+                                <div class="mode-icon">💎</div>
+                                <h3>高级模式</h3>
+                                <span class="mode-badge advanced">专业级</span>
+                            </div>
+                            <div class="mode-preview">
+                                <div class="preview-placeholder">
+                                    <span>样片预览</span>
+                                    <div class="preview-info">专业级效果</div>
+                                </div>
+                            </div>
+                            <div class="mode-description">
+                                <p>专业级制作，无限制定制</p>
+                                <ul class="mode-features">
+                                    <li>⏱️ 生成时间：30-60分钟</li>
+                                    <li>🎨 画面质量：极高</li>
+                                    <li>👥 人物一致性：完美</li>
+                                    <li>🤖 LoRA训练：无限制</li>
+                                    <li>🎨 自定义风格：支持</li>
+                                    <li>💰 成本：高</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 项目配置按钮 -->
+            <div class="project-config-btn" id="projectConfigBtn" onclick="goToProjectConfig()">
+                <div class="config-btn-content">
+                    <span class="config-icon">⚙️</span>
+                    <span class="config-text">项目配置</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

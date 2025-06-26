@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目配置 - AI动漫创作平台</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 动态光雾背景 -->
+    <div class="light-fog-container"></div>
+    
+    <!-- 顶部导航栏 -->
+    <header class="header">
+        <div class="nav-container">
+            <div class="logo-text">AI动漫创作平台</div>
+            <nav class="nav-menu">
+                <a href="../home/index.html" class="nav-link">首页</a>
+                <a href="index.html" class="nav-link">创建项目</a>
+                <a href="#" class="nav-link">我的项目</a>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- 主要内容 -->
+    <main class="main-content">
+        <div class="container">
+            <!-- 页面标题 -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    项目<span class="ai-text">配置</span>
+                </h1>
+                <p class="page-subtitle">
+                    根据您的选择配置项目详细信息
+                </p>
+            </div>
+            
+            <!-- 选择回顾 -->
+            <section class="selection-review">
+                <h2 class="section-title">您的选择</h2>
+                <div class="review-cards">
+                    <div class="review-card" id="route-review">
+                        <div class="review-icon">📚</div>
+                        <div class="review-content">
+                            <h3>创作路线</h3>
+                            <p id="selected-route-text">小说生成动漫</p>
+                        </div>
+                    </div>
+                    <div class="review-card" id="mode-review">
+                        <div class="review-icon">⚡</div>
+                        <div class="review-content">
+                            <h3>制作模式</h3>
+                            <p id="selected-mode-text">快速模式</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 项目基本信息 -->
+            <section class="project-info">
+                <h2 class="section-title">项目信息</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="project-name">项目名称</label>
+                        <input type="text" id="project-name" placeholder="请输入项目名称" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="project-description">项目描述</label>
+                        <textarea id="project-description" placeholder="简要描述您的项目内容和风格" rows="3"></textarea>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 内容输入区域 -->
+            <section class="content-input" id="content-section">
+                <h2 class="section-title">内容输入</h2>
+                <div class="content-form" id="novel-form">
+                    <div class="form-group">
+                        <label for="novel-content">小说内容</label>
+                        <textarea id="novel-content" placeholder="请粘贴或输入您的小说内容..." rows="8"></textarea>
+                        <div class="form-hint">支持文本格式，建议字数在1000-10000字之间</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="novel-file">或上传小说文件</label>
+                        <div class="file-upload">
+                            <input type="file" id="novel-file" accept=".txt,.doc,.docx" hidden>
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('novel-file').click()">
+                                选择文件
+                            </button>
+                            <span class="file-name" id="novel-file-name">未选择文件</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-form" id="script-form" style="display: none;">
+                    <div class="form-group">
+                        <label for="script-content">短剧剧本</label>
+                        <textarea id="script-content" placeholder="请输入您的短剧剧本内容..." rows="8"></textarea>
+                        <div class="form-hint">请按照标准剧本格式输入，包含场景、对话和动作描述</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="script-file">或上传剧本文件</label>
+                        <div class="file-upload">
+                            <input type="file" id="script-file" accept=".txt,.doc,.docx,.pdf" hidden>
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('script-file').click()">
+                                选择文件
+                            </button>
+                            <span class="file-name" id="script-file-name">未选择文件</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 角色配置 -->
+            <section class="character-config" id="character-section">
+                <h2 class="section-title">角色配置</h2>
+                <div class="character-limit-info" id="character-limit">
+                    <p>当前模式支持配置 <span class="limit-number">3</span> 个主要角色</p>
+                </div>
+                <div class="character-list" id="character-list">
+                    <!-- 角色配置项将通过JavaScript动态生成 -->
+                </div>
+                <button type="button" class="btn btn-secondary" id="add-character-btn">
+                    + 添加角色
+                </button>
+            </section>
+            
+            <!-- 风格配置 -->
+            <section class="style-config" id="style-section">
+                <h2 class="section-title">风格配置</h2>
+                <div class="style-options">
+                    <div class="style-presets">
+                        <h3>预设风格</h3>
+                        <div class="preset-grid">
+                            <div class="preset-card" data-style="anime">
+                                <div class="preset-preview">🎌</div>
+                                <h4>日式动漫</h4>
+                                <p>经典日本动漫风格</p>
+                            </div>
+                            <div class="preset-card" data-style="realistic">
+                                <div class="preset-preview">🎭</div>
+                                <h4>写实风格</h4>
+                                <p>接近真人的写实画风</p>
+                            </div>
+                            <div class="preset-card" data-style="cartoon">
+                                <div class="preset-preview">🎨</div>
+                                <h4>卡通风格</h4>
+                                <p>可爱的卡通画风</p>
+                            </div>
+                            <div class="preset-card" data-style="fantasy">
+                                <div class="preset-preview">✨</div>
+                                <h4>奇幻风格</h4>
+                                <p>魔幻奇幻主题风格</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="custom-style" id="custom-style-section" style="display: none;">
+                        <h3>自定义风格</h3>
+                        <div class="form-group">
+                            <label for="style-description">风格描述</label>
+                            <textarea id="style-description" placeholder="详细描述您想要的画面风格..." rows="4"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="reference-images">参考图片</label>
+                            <div class="file-upload">
+                                <input type="file" id="reference-images" accept="image/*" multiple hidden>
+                                <button type="button" class="btn btn-secondary" onclick="document.getElementById('reference-images').click()">
+                                    选择图片
+                                </button>
+                                <span class="file-name" id="reference-images-name">未选择文件</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 高级设置 -->
+            <section class="advanced-settings" id="advanced-section" style="display: none;">
+                <h2 class="section-title">高级设置</h2>
+                <div class="settings-grid">
+                    <div class="setting-group">
+                        <label for="video-quality">视频质量</label>
+                        <select id="video-quality">
+                            <option value="720p">720p (标准)</option>
+                            <option value="1080p" selected>1080p (高清)</option>
+                            <option value="4k">4K (超高清)</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label for="frame-rate">帧率</label>
+                        <select id="frame-rate">
+                            <option value="24">24 FPS</option>
+                            <option value="30" selected>30 FPS</option>
+                            <option value="60">60 FPS</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label for="video-length">预期时长 (分钟)</label>
+                        <input type="number" id="video-length" min="1" max="60" value="5">
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 操作按钮 -->
+            <div class="action-section">
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-secondary" id="back-to-selection">
+                        返回选择
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="save-draft">
+                        保存草稿
+                    </button>
+                    <button type="button" class="btn btn-primary" id="start-creation">
+                        开始创作
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="script.js"></script>
+    <script>
+        // 项目配置页面特定的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initProjectConfig();
+        });
+        
+        function initProjectConfig() {
+            // 从会话存储中获取之前的选择
+            const selectedRoute = sessionStorage.getItem('selectedRoute');
+            const selectedMode = sessionStorage.getItem('selectedMode');
+            
+            // 更新选择回顾
+            updateSelectionReview(selectedRoute, selectedMode);
+            
+            // 根据选择显示相应的配置选项
+            configurePageBySelection(selectedRoute, selectedMode);
+            
+            // 初始化角色配置
+            initCharacterConfig();
+            
+            // 初始化文件上传
+            initFileUploads();
+            
+            // 初始化按钮事件
+            initConfigButtons();
+        }
+        
+        function updateSelectionReview(route, mode) {
+            const routeText = document.getElementById('selected-route-text');
+            const modeText = document.getElementById('selected-mode-text');
+            
+            if (route) {
+                routeText.textContent = route === 'novel' ? '小说生成动漫' : '短剧改编动漫';
+            }
+            
+            if (mode) {
+                const modeNames = {
+                    'fast': '快速模式',
+                    'standard': '标准模式',
+                    'advanced': '高级模式'
+                };
+                modeText.textContent = modeNames[mode] || mode;
+            }
+        }
+        
+        function configurePageBySelection(route, mode) {
+            // 根据路线显示相应的内容输入表单
+            if (route === 'novel') {
+                document.getElementById('novel-form').style.display = 'block';
+                document.getElementById('script-form').style.display = 'none';
+            } else if (route === 'script') {
+                document.getElementById('novel-form').style.display = 'none';
+                document.getElementById('script-form').style.display = 'block';
+            }
+            
+            // 根据模式配置角色限制和高级设置
+            const characterLimit = document.querySelector('.limit-number');
+            const advancedSection = document.getElementById('advanced-section');
+            const customStyleSection = document.getElementById('custom-style-section');
+            
+            if (mode === 'fast') {
+                characterLimit.textContent = '1';
+                advancedSection.style.display = 'none';
+                customStyleSection.style.display = 'none';
+            } else if (mode === 'standard') {
+                characterLimit.textContent = '3';
+                advancedSection.style.display = 'block';
+                customStyleSection.style.display = 'none';
+            } else if (mode === 'advanced') {
+                characterLimit.textContent = '无限制';
+                advancedSection.style.display = 'block';
+                customStyleSection.style.display = 'block';
+            }
+        }
+        
+        function initCharacterConfig() {
+            const addCharacterBtn = document.getElementById('add-character-btn');
+            const characterList = document.getElementById('character-list');
+            let characterCount = 0;
+            
+            addCharacterBtn.addEventListener('click', function() {
+                const selectedMode = sessionStorage.getItem('selectedMode');
+                const maxCharacters = selectedMode === 'fast' ? 1 : (selectedMode === 'standard' ? 3 : Infinity);
+                
+                if (characterCount >= maxCharacters) {
+                    showNotification('已达到当前模式的角色数量限制', 'warning');
+                    return;
+                }
+                
+                characterCount++;
+                const characterItem = createCharacterItem(characterCount);
+                characterList.appendChild(characterItem);
+                
+                if (characterCount >= maxCharacters) {
+                    addCharacterBtn.style.display = 'none';
+                }
+            });
+        }
+        
+        function createCharacterItem(index) {
+            const div = document.createElement('div');
+            div.className = 'character-item';
+            div.innerHTML = `
+                <div class="character-header">
+                    <h4>角色 ${index}</h4>
+                    <button type="button" class="remove-character" onclick="removeCharacter(this)">
+                        ×
+                    </button>
+                </div>
+                <div class="character-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>角色名称</label>
+                            <input type="text" placeholder="角色名称" required>
+                        </div>
+                        <div class="form-group">
+                            <label>角色描述</label>
+                            <textarea placeholder="描述角色的外貌、性格等特征" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>参考图片</label>
+                        <div class="file-upload">
+                            <input type="file" accept="image/*" multiple hidden>
+                            <button type="button" class="btn btn-secondary" onclick="this.previousElementSibling.click()">
+                                选择图片
+                            </button>
+                            <span class="file-name">未选择文件</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+        
+        function removeCharacter(button) {
+            const characterItem = button.closest('.character-item');
+            characterItem.remove();
+            
+            // 重新显示添加按钮
+            const addCharacterBtn = document.getElementById('add-character-btn');
+            addCharacterBtn.style.display = 'inline-flex';
+            
+            // 更新角色计数
+            const characterItems = document.querySelectorAll('.character-item');
+            characterItems.forEach((item, index) => {
+                const header = item.querySelector('.character-header h4');
+                header.textContent = `角色 ${index + 1}`;
+            });
+        }
+        
+        function initFileUploads() {
+            // 处理所有文件上传
+            const fileInputs = document.querySelectorAll('input[type="file"]');
+            fileInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    const fileNameSpan = this.parentElement.querySelector('.file-name');
+                    if (this.files.length > 0) {
+                        if (this.files.length === 1) {
+                            fileNameSpan.textContent = this.files[0].name;
+                        } else {
+                            fileNameSpan.textContent = `已选择 ${this.files.length} 个文件`;
+                        }
+                    } else {
+                        fileNameSpan.textContent = '未选择文件';
+                    }
+                });
+            });
+        }
+        
+        function initConfigButtons() {
+            // 返回选择页面
+            document.getElementById('back-to-selection').addEventListener('click', function() {
+                window.location.href = 'index.html';
+            });
+            
+            // 保存草稿
+            document.getElementById('save-draft').addEventListener('click', function() {
+                showNotification('草稿保存功能即将上线！', 'info');
+            });
+            
+            // 开始创作
+            document.getElementById('start-creation').addEventListener('click', function() {
+                if (validateForm()) {
+                    showNotification('项目创建成功！正在准备创作环境...', 'success');
+                    // 这里可以添加实际的项目创建逻辑
+                    setTimeout(() => {
+                        showNotification('创作功能即将上线，敬请期待！', 'info');
+                    }, 2000);
+                }
+            });
+        }
+        
+        function validateForm() {
+            const projectName = document.getElementById('project-name').value.trim();
+            if (!projectName) {
+                showNotification('请输入项目名称', 'error');
+                return false;
+            }
+            
+            const selectedRoute = sessionStorage.getItem('selectedRoute');
+            if (selectedRoute === 'novel') {
+                const novelContent = document.getElementById('novel-content').value.trim();
+                const novelFile = document.getElementById('novel-file').files.length;
+                if (!novelContent && !novelFile) {
+                    showNotification('请输入小说内容或上传小说文件', 'error');
+                    return false;
+                }
+            } else if (selectedRoute === 'script') {
+                const scriptContent = document.getElementById('script-content').value.trim();
+                const scriptFile = document.getElementById('script-file').files.length;
+                if (!scriptContent && !scriptFile) {
+                    showNotification('请输入剧本内容或上传剧本文件', 'error');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+    </script>
+</body>
+</html>

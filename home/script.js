@@ -233,8 +233,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (primaryBtn) {
         primaryBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            // 这里可以添加跳转到创作页面的逻辑
-            showNotification('开始创作功能即将上线！', 'info');
+            // 滚动到页面下方并显示登录窗口
+            const scrollTarget = window.innerHeight * 0.8; // 滚动到80%视口高度的位置
+            window.scrollTo({
+                top: scrollTarget,
+                behavior: 'smooth'
+            });
+            
+            // 延迟显示登录窗口，让滚动动画先完成
+            setTimeout(() => {
+                if (loginModal) {
+                    loginModal.classList.add('show');
+                }
+                showNotification('请登录后开始创作！', 'info');
+            }, 800);
         });
     }
 
@@ -280,9 +292,14 @@ document.addEventListener('DOMContentLoaded', function() {
             this.disabled = true;
             
             setTimeout(() => {
-                showNotification('登录功能即将上线！', 'info');
+                showNotification('登录成功！正在跳转到项目创建页面...', 'success');
                 this.textContent = '立即登录';
                 this.disabled = false;
+                
+                // 跳转到项目创建页面
+                setTimeout(() => {
+                    window.location.href = '../ProjectConfig/index.html';
+                }, 1000);
             }, 2000);
         });
     }
