@@ -228,12 +228,13 @@ body {
 
 /* 短剧路线 - 紫色光效 */
 .route-card[data-route="drama"]:hover {
-    border-color: #9c27b0;
-    box-shadow: 0 20px 50px rgba(156, 39, 176, 0.4), 0 0 30px rgba(156, 39, 176, 0.2), inset 0 0 20px rgba(156, 39, 176, 0.1);
+    border-color: #a046ff;
+    box-shadow: 0 20px 40px rgba(160, 70, 255, 0.5), 0 0 30px rgba(160, 70, 255, 0.4), inset 0 0 20px rgba(160, 70, 255, 0.15);
+    transform: translateY(-8px) rotateX(5deg) rotateY(-2deg);
 }
 
 .route-card[data-route="drama"]:hover::before {
-    background: linear-gradient(135deg, rgba(156, 39, 176, 0.15) 0%, rgba(156, 39, 176, 0.08) 50%, rgba(156, 39, 176, 0.03) 100%);
+    background: linear-gradient(135deg, rgba(160, 70, 255, 0.2) 0%, rgba(180, 130, 255, 0.15) 50%, rgba(160, 70, 255, 0.08) 100%);
 }
 
 .route-card.selected {
@@ -250,9 +251,9 @@ body {
 }
 
 .route-card[data-route="drama"].selected {
-    border-color: #9c27b0;
-    background: rgba(156, 39, 176, 0.1);
-    box-shadow: 0 0 25px rgba(156, 39, 176, 0.4);
+    border-color: rgba(160, 70, 255, 0.9);
+    background: linear-gradient(135deg, rgba(160, 70, 255, 0.12) 0%, rgba(180, 130, 255, 0.06) 100%);
+    box-shadow: 0 15px 30px rgba(160, 70, 255, 0.4), 0 0 20px rgba(160, 70, 255, 0.3), inset 0 0 15px rgba(160, 70, 255, 0.1);
 }
 
 .route-icon {
@@ -449,12 +450,13 @@ body {
 
 /* 高级模式 - 紫色光效（专业级） */
 .mode-card[data-mode="advanced"]:hover {
-    border-color: #a855f7;
-    box-shadow: 0 25px 60px rgba(168, 85, 247, 0.45), 0 0 40px rgba(168, 85, 247, 0.25), inset 0 0 25px rgba(168, 85, 247, 0.12);
+    border-color: #a046ff;
+    box-shadow: 0 25px 50px rgba(160, 70, 255, 0.6), 0 0 40px rgba(160, 70, 255, 0.5), inset 0 0 25px rgba(160, 70, 255, 0.2);
+    transform: translateY(-10px) rotateX(8deg) rotateY(-3deg);
 }
 
 .mode-card[data-mode="advanced"]:hover::before {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.18) 0%, rgba(168, 85, 247, 0.1) 50%, rgba(168, 85, 247, 0.04) 100%);
+    background: linear-gradient(135deg, rgba(160, 70, 255, 0.25) 0%, rgba(180, 130, 255, 0.2) 50%, rgba(160, 70, 255, 0.1) 100%);
 }
 
 .mode-card.selected {
@@ -477,9 +479,9 @@ body {
 }
 
 .mode-card[data-mode="advanced"].selected {
-    border-color: #a855f7;
-    background: rgba(168, 85, 247, 0.1);
-    box-shadow: 0 0 35px rgba(168, 85, 247, 0.45);
+    border-color: rgba(160, 70, 255, 0.9);
+    background: linear-gradient(135deg, rgba(160, 70, 255, 0.12) 0%, rgba(180, 130, 255, 0.06) 100%);
+    box-shadow: 0 20px 40px rgba(160, 70, 255, 0.5), 0 0 25px rgba(160, 70, 255, 0.4), inset 0 0 20px rgba(160, 70, 255, 0.12);
 }
 
 .mode-header {
